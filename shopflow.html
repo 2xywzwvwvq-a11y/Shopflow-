@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f172a">
+<title>ShopFlow - Daily Shop Board</title>
+<style>
+  :root {
+    --bg: #0b0f19;
+    --surface: #151b2b;
+    --surface-2: #1e2538;
+    --border: #2a324a;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --accent: #f59e0b;
+    --accent-2: #3b82f6;
+    --urgent: #ef4444;
+    --warning: #f97316;
+    --success: #22c55e;
+    --info: #06b6d4;
+    --radius: 14px;
+    --shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html { background: var(--bg); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 100px;
+    overflow-x: hidden;
+  }
+  .header {
+    background: linear-gradient(180deg, var(--surface) 0%, var(--bg) 100%);
+    padding: 20px 16px 12px;
+    position: sticky; top:0; z-index:100;
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+  .header-top {
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;
+  }
+  .logo { font-size:22px; font-weight:800; letter-spacing:-0.5px; }
+  .logo span { color: var(--accent); }
+  .date-badge {
+    background: var(--surface-2); border:1px solid var(--border);
+    padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:600;
+    color: var(--accent);
+  }
+  .nav-pills {
+    display:flex; gap:8px; overflow-x:auto; padding-bottom:4px;
+    scrollbar-width:none;
+  }
+  .nav-pills::-webkit-scrollbar { display:none; }
+  .pill {
+    flex-shrink:0; padding:8px 18px; border-radius:20px;
+    background: var(--surface-2); border:1px solid var(--border);
+    font-size:13px; font-weight:600; color: var(--text-dim);
+    cursor:pointer; transition: all 0.2s; white-space:nowrap;
+  }
+  .pill.active { background: var(--accent); color: #000; border-color: var(--accent); }
+  .pill .count {
+    display:inline-block; margin-left:6px; background:rgba(0,0,0,0.3);
+    padding:2px 8px; border-radius:10px; font-size:11px;
+  }
+  .section { display:none; padding: 16px; animation: fadeIn 0.3s ease; }
+  .section.active { display:block; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(10px);} to { opacity:1; transform:translateY(0);} }
+  .section-title {
+    font-size:12px; text-transform:uppercase; letter-spacing:1px;
+    color: var(--text-dim); margin-bottom:12px; font-weight:700;
+  }
+  .card {
+    background: var(--surface); border:1px solid var(--border);
+    border-radius: var(--radius); padding: 16px; margin-bottom: 12px;
+    box-shadow: var(--shadow); position:relative;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .card:active { transform: scale(0.98); }
+  .card-header {
+    display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;
+  }
+  .card-title { font-size:16px; font-weight:700; line-height:1.3; }
+  .badge {
+    padding:4px 10px; border-radius:8px; font-size:11px; font-weight:700; text-transform:uppercase;
+  }
+  .badge-urgent { background: rgba(239,68,68,0.15); color: var(--urgent); border:1px solid rgba(239,68,68,0.3); }
+  .badge-warning { background: rgba(249,115,22,0.15); color: var(--warning); border:1px solid rgba(249,115,22,0.3); }
+  .badge-normal { background: rgba(59,130,246,0.15); color: var(--accent-2); border:1px solid rgba(59,130,246,0.3); }
+  .badge-done { background: rgba(34,197,94,0.15); color: var(--success); border:1px solid rgba(34,197,94,0.3); }
+  .card-meta {
+    display:flex; flex-wrap:wrap; gap:12px; margin-bottom:10px;
+    font-size:13px; color: var(--text-dim);
+  }
+  .meta-item { display:flex; align-items:center; gap:5px; }
+  .meta-item svg { width:14px; height:14px; opacity:0.7; }
+  .card-tools {
+    display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;
+  }
+  .tool-tag {
+    background: var(--surface-2); border:1px solid var(--border);
+    padding:4px 10px; border-radius:8px; font-size:12px; color: var(--text-dim);
+  }
+  .card-actions {
+    display:flex; gap:8px; margin-top:12px; padding-top:12px;
+    border-top:1px solid var(--border);
+  }
+  .btn {
+    flex:1; padding:10px; border-radius:10px; border:none;
+    font-size:13px; font-weight:700; cursor:pointer; text-align:center;
+    transition: all 0.2s;
+  }
+  .btn-primary { background: var(--accent); color:#000; }
+  .btn-ghost { background: var(--surface-2); color: var(--text); border:1px solid var(--border); }
+  .btn-danger { background: rgba(239,68,68,0.15); color: var(--urgent); border:1px solid rgba(239,68,68,0.3); }
+  .btn-success { background: rgba(34,197,94,0.15); color: var(--success); border:1px solid rgba(34,197,94,0.3); }
+  .btn:active { transform: scale(0.96); opacity:0.8; }
+  .mechanic-grid {
+    display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:10px;
+  }
+  .mech-card {
+    background: var(--surface); border:1px solid var(--border);
+    border-radius: var(--radius); padding: 14px; text-align:center;
+    position:relative;
+  }
+  .mech-avatar {
+    width:50px; height:50px; border-radius:50%;
+    background: linear-gradient(135deg, var(--accent), var(--warning));
+    margin:0 auto 10px; display:flex; align-items:center; justify-content:center;
+    font-size:20px; font-weight:800; color:#000;
+  }
+  .mech-name { font-size:14px; font-weight:700; margin-bottom:4px; }
+  .mech-role { font-size:12px; color: var(--text-dim); margin-bottom:8px; }
+  .mech-status {
+    display:inline-block; padding:3px 10px; border-radius:10px;
+    font-size:11px; font-weight:700;
+  }
+  .status-in { background: rgba(34,197,94,0.15); color: var(--success); }
+  .status-out { background: rgba(148,163,184,0.15); color: var(--text-dim); }
+  .status-busy { background: rgba(239,68,68,0.15); color: var(--urgent); }
+  .mech-toggle {
+    position:absolute; top:8px; right:8px; width:28px; height:28px;
+    border-radius:50%; border:1px solid var(--border); background:var(--surface-2);
+    color:var(--text); display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:16px;
+  }
+  .tool-cat {
+    background: var(--surface); border:1px solid var(--border);
+    border-radius: var(--radius); margin-bottom:12px; overflow:hidden;
+  }
+  .tool-cat-header {
+    padding:14px 16px; background: var(--surface-2);
+    display:flex; justify-content:space-between; align-items:center;
+    cursor:pointer; font-weight:700; font-size:14px;
+  }
+  .tool-cat-header::after {
+    content: '▼'; font-size:10px; color: var(--text-dim);
+    transition: transform 0.2s;
+  }
+  .tool-cat.collapsed .tool-cat-header::after { transform: rotate(-90deg); }
+  .tool-cat.collapsed .tool-cat-body { display:none; }
+  .tool-cat-body { padding:12px 16px; }
+  .tool-check {
+    display:flex; align-items:center; gap:10px; padding:8px 0;
+    border-bottom:1px solid var(--border);
+  }
+  .tool-check:last-child { border-bottom:none; }
+  .check-box {
+    width:22px; height:22px; border-radius:6px; border:2px solid var(--border);
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    flex-shrink:0; transition: all 0.15s;
+  }
+  .check-box.checked { background: var(--accent); border-color: var(--accent); }
+  .check-box.checked::after { content: '✓'; color:#000; font-weight:800; font-size:13px; }
+  .tool-check.checked span { text-decoration: line-through; opacity:0.5; }
+  .fab {
+    position:fixed; bottom:24px; right:24px; z-index:200;
+    width:60px; height:60px; border-radius:50%;
+    background: var(--accent); color:#000; border:none;
+    font-size:28px; font-weight:300; cursor:pointer;
+    box-shadow: 0 6px 24px rgba(245,158,11,0.4);
+    display:flex; align-items:center; justify-content:center;
+    transition: transform 0.2s;
+  }
+  .fab:active { transform: scale(0.9); }
+  .modal-overlay {
+    position:fixed; inset:0; background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(8px); z-index:300;
+    display:none; align-items:flex-end; justify-content:center;
+  }
+  .modal-overlay.active { display:flex; }
+  .modal {
+    background: var(--surface); width:100%; max-width:500px;
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 20px; max-height: 90vh; overflow-y:auto;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from { transform:translateY(100%);} to { transform:translateY(0);} }
+  .modal-title { font-size:20px; font-weight:800; margin-bottom:16px; }
+  .form-group { margin-bottom:14px; }
+  .form-label { display:block; font-size:13px; font-weight:600; color:var(--text-dim); margin-bottom:6px; text-transform:uppercase; }
+  .form-input, .form-select, .form-textarea {
+    width:100%; padding:12px 14px; border-radius:10px;
+    background: var(--surface-2); border:1px solid var(--border);
+    color: var(--text); font-size:15px; font-family:inherit;
+    outline:none; transition: border-color 0.2s;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+  .form-textarea { min-height:80px; resize:vertical; }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .modal-actions { display:flex; gap:10px; margin-top:20px; }
+  .modal-actions .btn { padding:14px; }
+  .swipe-hint {
+    text-align:center; font-size:12px; color: var(--text-dim);
+    padding: 8px; opacity:0.6;
+  }
+  .archive-card { opacity:0.6; }
+  .archive-card .card-title { text-decoration: line-through; }
+  .share-btn {
+    background: var(--surface-2); border:1px solid var(--border);
+    width:36px; height:36px; border-radius:10px;
+    display:flex; align-items:center; justify-content:center;
+    color: var(--text); cursor:pointer;
+  }
+  .empty-state {
+    text-align:center; padding: 40px 20px; color: var(--text-dim);
+  }
+  .empty-state svg { width:48px; height:48px; margin-bottom:12px; opacity:0.4; }
+  .empty-state p { font-size:14px; }
+  .toast {
+    position:fixed; top:20px; left:50%; transform:translateX(-50%) translateY(-100px);
+    background: var(--surface-2); border:1px solid var(--border);
+    padding:12px 24px; border-radius:12px; font-weight:600; z-index:400;
+    box-shadow: var(--shadow); transition: transform 0.3s ease;
+    display:flex; align-items:center; gap:8px;
+  }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="logo">Shop<span>Flow</span></div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <div class="date-badge" id="currentDate">Loading...</div>
+      <button class="share-btn" onclick="shareBoard()" title="Share Board">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="nav-pills" id="navPills">
+    <div class="pill active" data-tab="jobs" onclick="switchTab('jobs')">Jobs <span class="count" id="jobCount">0</span></div>
+    <div class="pill" data-tab="mechanics" onclick="switchTab('mechanics')">Crew <span class="count" id="mechCount">0</span></div>
+    <div class="pill" data-tab="tools" onclick="switchTab('tools')">Tools</div>
+    <div class="pill" data-tab="archive" onclick="switchTab('archive')">Done <span class="count" id="archiveCount">0</span></div>
+  </div>
+</div>
+
+<div class="section active" id="jobsSection">
+  <div class="section-title">Active Jobs</div>
+  <div id="jobsList"></div>
+  <div class="swipe-hint">Tap + to add a new job</div>
+</div>
+
+<div class="section" id="mechanicsSection">
+  <div class="section-title">Today's Crew</div>
+  <div class="mechanic-grid" id="mechanicsList"></div>
+  <div class="swipe-hint">Tap the dot to toggle status</div>
+</div>
+
+<div class="section" id="toolsSection">
+  <div class="section-title">Tool Checklists</div>
+  <div id="toolsList"></div>
+</div>
+
+<div class="section" id="archiveSection">
+  <div class="section-title">Completed Jobs</div>
+  <div id="archiveList"></div>
+  <div class="swipe-hint">Archived jobs stay here for 30 days</div>
+</div>
+
+<button class="fab" onclick="openModal()">+</button>
+
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">New Job</div>
+    <form id="jobForm" onsubmit="saveJob(event)">
+      <div class="form-group">
+        <label class="form-label">Customer Name</label>
+        <input type="text" class="form-input" id="custName" placeholder="e.g. Mike Johnson" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input type="tel" class="form-input" id="custPhone" placeholder="(555) 000-0000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Vehicle</label>
+          <input type="text" class="form-input" id="custVehicle" placeholder="e.g. 2015 Mustang">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Job Description</label>
+        <textarea class="form-textarea" id="jobDesc" placeholder="Turbo install, brake job, diag..." required></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Priority</label>
+          <select class="form-select" id="jobPriority">
+            <option value="urgent">🔴 Urgent</option>
+            <option value="warning">🟡 Priority</option>
+            <option value="normal" selected>🔵 Standard</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Assigned To</label>
+          <select class="form-select" id="jobAssign">
+            <option value="">Unassigned</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tools Needed (comma separated)</label>
+        <input type="text" class="form-input" id="jobTools" placeholder="Torque wrench, 10mm socket, scan tool...">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Job</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toastMsg">Saved!</span></div>
+
+<script>
+let data = {
+  jobs: [],
+  mechanics: [
+    { id: 'm1', name: 'Garrett', role: 'Lead Tech', status: 'in', initials: 'G' },
+    { id: 'm2', name: 'Alex', role: 'Diagnostic', status: 'in', initials: 'A' },
+    { id: 'm3', name: 'Jose', role: 'General', status: 'busy', initials: 'J' },
+    { id: 'm4', name: 'Derek', role: 'Apprentice', status: 'out', initials: 'D' }
+  ],
+  toolCategories: [
+    {
+      name: 'Engine / Turbo',
+      tools: ['Torque wrench (ft-lb)', 'Torque wrench (in-lb)', '3/8" drive sockets', '1/2" drive sockets', 'Torx bits (T25-T55)', 'Hex keys (metric)', 'Pry bar set', 'Breaker bar', 'Magnetic pickup tool']
+    },
+    {
+      name: 'Brake & Suspension',
+      tools: ['C-clamp / caliper tool', 'Brake bleeder kit', 'Impact driver', 'Ball joint press', 'Spring compressor', 'Strut spreader', 'Caliper hanger']
+    },
+    {
+      name: 'Electrical / Diag',
+      tools: ['OBD2 scanner', 'Multimeter', 'Test light', 'Wire strippers', 'Butt connectors / heat shrink', 'Dielectric grease', 'Battery tester']
+    },
+    {
+      name: 'General Shop',
+      tools: ['Jack + stands (rated)', 'Oil drain pan', 'Funnel set', 'Shop towels', 'Brake clean', 'PB Blaster / penetrant', 'Shop vac']
+    }
+  ],
+  toolState: {},
+  archive: []
+};
+
+let editingId = null;
+
+function init() {
+  const saved = localStorage.getItem('shopflow_data');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      data = { ...data, ...parsed };
+    } catch(e) {}
+  }
+  updateDate();
+  renderAll();
+  setInterval(updateDate, 60000);
+}
+
+function saveData() {
+  localStorage.setItem('shopflow_data', JSON.stringify(data));
+}
+
+function updateDate() {
+  const d = new Date();
+  const opts = { weekday: 'short', month: 'short', day: 'numeric' };
+  document.getElementById('currentDate').textContent = d.toLocaleDateString('en-US', opts);
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.pill').forEach(p => p.classList.toggle('active', p.dataset.tab === tab));
+  document.querySelectorAll('.section').forEach(s => s.classList.toggle('active', s.id === tab + 'Section'));
+}
+
+function renderJobs() {
+  const list = document.getElementById('jobsList');
+  const active = data.jobs.filter(j => !j.archived);
+  document.getElementById('jobCount').textContent = active.length;
+  
+  if (!active.length) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+        <p>No active jobs. Tap + to add one.</p>
+      </div>`;
+    return;
+  }
+  
+  const priorityOrder = { urgent: 0, warning: 1, normal: 2 };
+  active.sort((a,b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+  
+  list.innerHTML = active.map(job => {
+    const mech = data.mechanics.find(m => m.id === job.assignedTo);
+    const tools = job.tools ? job.tools.split(',').map(t => t.trim()).filter(Boolean) : [];
+    return `
+      <div class="card" data-id="${job.id}">
+        <div class="card-header">
+          <div class="card-title">${esc(job.desc)}</div>
+          <div class="badge badge-${job.priority}">${job.priority}</div>
+        </div>
+        <div class="card-meta">
+          <div class="meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            ${esc(job.customer)}
+          </div>
+          ${job.phone ? `<div class="meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg><a href="tel:${job.phone}" style="color:inherit;text-decoration:none;">${esc(job.phone)}</a></div>` : ''}
+          ${job.vehicle ? `<div class="meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg>${esc(job.vehicle)}</div>` : ''}
+          ${mech ? `<div class="meta-item" style="color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${esc(mech.name)}</div>` : ''}
+        </div>
+        ${tools.length ? `<div class="card-tools">${tools.map(t => `<span class="tool-tag">${esc(t)}</span>`).join('')}</div>` : ''}
+        <div class="card-actions">
+          <button class="btn btn-ghost" onclick="editJob('${job.id}')">Edit</button>
+          <button class="btn btn-success" onclick="archiveJob('${job.id}')">Complete</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderArchive() {
+  const list = document.getElementById('archiveList');
+  document.getElementById('archiveCount').textContent = data.archive.length;
+  
+  if (!data.archive.length) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>
+        <p>No completed jobs yet.</p>
+      </div>`;
+    return;
+  }
+  
+  list.innerHTML = data.archive.slice().reverse().map(job => {
+    const mech = data.mechanics.find(m => m.id === job.assignedTo);
+    const doneDate = job.completedAt ? new Date(job.completedAt).toLocaleDateString() : 'Recently';
+    return `
+      <div class="card archive-card" data-id="${job.id}">
+        <div class="card-header">
+          <div class="card-title">${esc(job.desc)}</div>
+          <div class="badge badge-done">Done</div>
+        </div>
+        <div class="card-meta">
+          <div class="meta-item">${esc(job.customer)} • ${esc(job.vehicle || 'No vehicle')}</div>
+          <div class="meta-item">Completed: ${doneDate}</div>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-ghost" onclick="restoreJob('${job.id}')">Restore</button>
+          <button class="btn btn-danger" onclick="deleteJob('${job.id}', true)">Delete</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderMechanics() {
+  const list = document.getElementById('mechanicsList');
+  document.getElementById('mechCount').textContent = data.mechanics.filter(m => m.status !== 'out').length;
+  
+  list.innerHTML = data.mechanics.map(m => {
+    const statusClass = m.status === 'in' ? 'status-in' : m.status === 'busy' ? 'status-busy' : 'status-out';
+    const statusLabel = m.status === 'in' ? 'Available' : m.status === 'busy' ? 'On Job' : 'Off';
+    return `
+      <div class="mech-card">
+        <button class="mech-toggle" onclick="cycleMechStatus('${m.id}')" title="Toggle status">●</button>
+        <div class="mech-avatar">${esc(m.initials)}</div>
+        <div class="mech-name">${esc(m.name)}</div>
+        <div class="mech-role">${esc(m.role)}</div>
+        <div class="mech-status ${statusClass}">${statusLabel}</div>
+      </div>
+    `;
+  }).join('');
+  
+  const assignSelect = document.getElementById('jobAssign');
+  const currentVal = assignSelect.value;
+  assignSelect.innerHTML = '<option value="">Unassigned</option>' + 
+    data.mechanics.map(m => `<option value="${m.id}">${esc(m.name)}</option>`).join('');
+  assignSelect.value = currentVal;
+}
+
+function cycleMechStatus(id) {
+  const mech = data.mechanics.find(m => m.id === id);
+  const cycle = { 'in': 'busy', 'busy': 'out', 'out': 'in' };
+  mech.status = cycle[mech.status];
+  saveData();
+  renderAll();
+  showToast(`${mech.name} is now ${mech.status === 'in' ? 'available' : mech.status === 'busy' ? 'on a job' : 'off'}`);
+}
+
+function renderTools() {
+  const list = document.getElementById('toolsList');
+  list.innerHTML = data.toolCategories.map((cat, ci) => {
+    const checkedCount = cat.tools.filter((_, ti) => data.toolState[`${ci}-${ti}`]).length;
+    const isCollapsed = checkedCount === cat.tools.length && checkedCount > 0;
+    return `
+      <div class="tool-cat ${isCollapsed ? 'collapsed' : ''}" id="toolCat-${ci}">
+        <div class="tool-cat-header" onclick="toggleToolCat(${ci})">
+          <span>${esc(cat.name)} <span style="color:var(--text-dim);font-weight:500;">(${checkedCount}/${cat.tools.length})</span></span>
+        </div>
+        <div class="tool-cat-body">
+          ${cat.tools.map((tool, ti) => {
+            const key = `${ci}-${ti}`;
+            const checked = data.toolState[key] ? 'checked' : '';
+            return `
+              <div class="tool-check ${checked}" onclick="toggleTool('${key}', this)">
+                <div class="check-box ${checked}"></div>
+                <span>${esc(tool)}</span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleToolCat(ci) {
+  document.getElementById(`toolCat-${ci}`).classList.toggle('collapsed');
+}
+
+function toggleTool(key, el) {
+  data.toolState[key] = !data.toolState[key];
+  el.classList.toggle('checked');
+  el.querySelector('.check-box').classList.toggle('checked');
+  saveData();
+  renderTools();
+}
+
+function openModal(editId = null) {
+  editingId = editId;
+  document.getElementById('modalTitle').textContent = editId ? 'Edit Job' : 'New Job';
+  document.getElementById('modalOverlay').classList.add('active');
+  
+  if (editId) {
+    const job = data.jobs.find(j => j.id === editId);
+    document.getElementById('custName').value = job.customer;
+    document.getElementById('custPhone').value = job.phone || '';
+    document.getElementById('custVehicle').value = job.vehicle || '';
+    document.getElementById('jobDesc').value = job.desc;
+    document.getElementById('jobPriority').value = job.priority;
+    document.getElementById('jobAssign').value = job.assignedTo || '';
+    document.getElementById('jobTools').value = job.tools || '';
+  } else {
+    document.getElementById('jobForm').reset();
+  }
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('active');
+  editingId = null;
+}
+
+function saveJob(e) {
+  e.preventDefault();
+  const job = {
+    id: editingId || 'j' + Date.now(),
+    customer: document.getElementById('custName').value.trim(),
+    phone: document.getElementById('custPhone').value.trim(),
+    vehicle: document.getElementById('custVehicle').value.trim(),
+    desc: document.getElementById('jobDesc').value.trim(),
+    priority: document.getElementById('jobPriority').value,
+    assignedTo: document.getElementById('jobAssign').value,
+    tools: document.getElementById('jobTools').value.trim(),
+    createdAt: editingId ? (data.jobs.find(j => j.id === editingId)?.createdAt || Date.now()) : Date.now(),
+    archived: false
+  };
+  
+  if (editingId) {
+    const idx = data.jobs.findIndex(j => j.id === editingId);
+    data.jobs[idx] = job;
+  } else {
+    data.jobs.push(job);
+  }
+  
+  saveData();
+  closeModal();
+  renderAll();
+  showToast(editingId ? 'Job updated' : 'Job added');
+}
+
+function editJob(id) {
+  openModal(id);
+}
+
+function archiveJob(id) {
+  const job = data.jobs.find(j => j.id === id);
+  job.archived = true;
+  job.completedAt = Date.now();
+  data.archive.push(job);
+  saveData();
+  renderAll();
+  showToast('Job archived');
+}
+
+function restoreJob(id) {
+  const idx = data.archive.findIndex(j => j.id === id);
+  const job = data.archive[idx];
+  job.archived = false;
+  delete job.completedAt;
+  data.jobs.push(job);
+  data.archive.splice(idx, 1);
+  saveData();
+  renderAll();
+  showToast('Job restored');
+}
+
+function deleteJob(id, fromArchive = false) {
+  if (!confirm('Delete permanently?')) return;
+  if (fromArchive) {
+    data.archive = data.archive.filter(j => j.id !== id);
+  } else {
+    data.jobs = data.jobs.filter(j => j.id !== id);
+  }
+  saveData();
+  renderAll();
+  showToast('Deleted');
+}
+
+function renderAll() {
+  renderJobs();
+  renderMechanics();
+  renderTools();
+  renderArchive();
+}
+
+function esc(str) {
+  const div = document.createElement('div');
+  div.textContent = str || '';
+  return div.innerHTML;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+async function shareBoard() {
+  const summary = [
+    `📋 ShopFlow - ${new Date().toLocaleDateString()}`,
+    ``,
+    `👥 Crew In: ${data.mechanics.filter(m => m.status !== 'out').map(m => m.name).join(', ') || 'None'}`,
+    `🔧 Active Jobs: ${data.jobs.filter(j => !j.archived).length}`,
+    `✅ Completed Today: ${data.archive.filter(j => j.completedAt && new Date(j.completedAt).toDateString() === new Date().toDateString()).length}`,
+    ``,
+    `--- URGENT ---`,
+    ...data.jobs.filter(j => !j.archived && j.priority === 'urgent').map(j => `🔴 ${j.customer} - ${j.desc} (${j.vehicle || 'No vehicle'})`),
+    ``,
+    `--- PRIORITY ---`,
+    ...data.jobs.filter(j => !j.archived && j.priority === 'warning').map(j => `🟡 ${j.customer} - ${j.desc}`),
+  ].join('\n');
+  
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: 'ShopFlow Daily Board', text: summary });
+    } catch(e) {}
+  } else {
+    await navigator.clipboard.writeText(summary);
+    showToast('Summary copied to clipboard');
+  }
+}
+
+init();
+</script>
+</body>
+</html>
