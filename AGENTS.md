@@ -2,6 +2,8 @@
 
 ## Cursor Cloud specific instructions
 
+**Product focus:** Prefer **ShopFlow** unless the user asks about TradePro. ShopFlow is for a **2-person mobile mechanic** team (owner + partner) — job memory / daily board, not a multi-tech shop floor. The Crew tab’s fake multi-tech roster is out of scope for that use case.
+
 This repo is two independent **client-only** HTML apps (no package manager, backend, database, lint, tests, or build step):
 
 | App | Path | URL when serving repo root |
