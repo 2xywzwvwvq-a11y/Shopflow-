@@ -2,11 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-title" content="ShopFlow">
+<meta name="theme-color" content="#0b0f19">
 <title>ShopFlow - Mobile Job Board</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="shopflow-icon.png">
+<link rel="icon" href="shopflow-icon.png" type="image/png">
 <style>
   :root {
     --bg: #0b0f19;
@@ -20,10 +25,12 @@
     --urgent: #ef4444;
     --warning: #f97316;
     --success: #22c55e;
-    --info: #06b6d4;
     --waiting: #a855f7;
-    --radius: 14px;
-    --shadow: 0 4px 20px rgba(0,0,0,0.4);
+    --radius: 16px;
+    --shadow: 0 8px 24px rgba(0,0,0,0.35);
+    --tabbar-h: 64px;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
   }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html { background: var(--bg); }
@@ -32,126 +39,158 @@
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
-    padding-bottom: 100px;
+    min-height: 100dvh;
+    padding-bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 84px);
     overflow-x: hidden;
   }
   .header {
-    background: linear-gradient(180deg, var(--surface) 0%, var(--bg) 100%);
-    padding: 20px 16px 12px;
+    background: rgba(11, 15, 25, 0.88);
+    padding: calc(10px + var(--safe-top)) 16px 10px;
     position: sticky; top:0; z-index:100;
     backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--border);
   }
   .header-top {
-    display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;
+    display:flex; justify-content:space-between; align-items:center; gap:12px;
   }
-  .logo { font-size:22px; font-weight:800; letter-spacing:-0.5px; }
+  .logo { font-size:20px; font-weight:800; letter-spacing:-0.4px; line-height:1; }
   .logo span { color: var(--accent); }
+  .header-right { display:flex; align-items:center; gap:8px; position:relative; }
   .date-badge {
     background: var(--surface-2); border:1px solid var(--border);
-    padding: 6px 14px; border-radius: 20px; font-size:13px; font-weight:600;
-    color: var(--accent);
+    padding: 8px 12px; border-radius: 999px; font-size:13px; font-weight:700;
+    color: var(--accent); min-height:44px; display:flex; align-items:center;
   }
-  .nav-pills {
-    display:flex; gap:8px; overflow-x:auto; padding-bottom:4px;
-    scrollbar-width:none;
-  }
-  .nav-pills::-webkit-scrollbar { display:none; }
-  .pill {
-    flex-shrink:0; padding:8px 18px; border-radius:20px;
+  .icon-btn {
     background: var(--surface-2); border:1px solid var(--border);
-    font-size:13px; font-weight:600; color: var(--text-dim);
-    cursor:pointer; transition: all 0.2s; white-space:nowrap;
+    width:44px; height:44px; border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+    color: var(--text); cursor:pointer; font-size:20px; font-weight:700;
   }
-  .pill.active { background: var(--accent); color: #000; border-color: var(--accent); }
-  .pill .count {
-    display:inline-block; margin-left:6px; background:rgba(0,0,0,0.3);
-    padding:2px 8px; border-radius:10px; font-size:11px;
+  .header-menu {
+    display:none; position:absolute; right:0; top:calc(100% + 8px);
+    background: var(--surface); border:1px solid var(--border);
+    border-radius: 12px; min-width: 180px; overflow:hidden;
+    box-shadow: var(--shadow); z-index:120;
   }
-  .section { display:none; padding: 16px; animation: fadeIn 0.3s ease; }
+  .header-menu.open { display:block; }
+  .header-menu button {
+    width:100%; text-align:left; background:none; border:none;
+    color: var(--text); font: inherit; font-weight:700; font-size:15px;
+    padding: 14px 16px; cursor:pointer; min-height:44px;
+  }
+  .header-menu button:active { background: var(--surface-2); }
+  .section { display:none; padding: 16px; animation: fadeIn 0.25s ease; }
   .section.active { display:block; }
-  @keyframes fadeIn { from { opacity:0; transform:translateY(10px);} to { opacity:1; transform:translateY(0);} }
-  .section-title {
-    font-size:12px; text-transform:uppercase; letter-spacing:1px;
-    color: var(--text-dim); margin-bottom:12px; font-weight:700;
-    display:flex; justify-content:space-between; align-items:center; gap:8px;
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px);} to { opacity:1; transform:translateY(0);} }
+
+  .job-group { margin-bottom: 22px; }
+  .group-title {
+    font-size:13px; font-weight:800; margin: 0 0 10px;
+    display:flex; align-items:center; gap:8px; color: var(--text);
   }
+  .group-title .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .group-title .n { color: var(--text-dim); font-weight:700; }
+  .dot-onsite { background: var(--success); }
+  .dot-waiting { background: var(--waiting); }
+  .dot-queued { background: var(--accent-2); }
+
   .card {
     background: var(--surface); border:1px solid var(--border);
     border-radius: var(--radius); padding: 16px; margin-bottom: 12px;
     box-shadow: var(--shadow); position:relative;
-    transition: transform 0.15s, box-shadow 0.15s;
+    border-left: 4px solid var(--accent-2);
   }
-  .card:active { transform: scale(0.98); }
-  .card-header {
-    display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; gap:10px;
+  .card.status-onsite { border-left-color: var(--success); }
+  .card.status-waiting { border-left-color: var(--waiting); }
+  .card.status-queued { border-left-color: var(--accent-2); }
+  .card-top {
+    display:flex; justify-content:space-between; align-items:flex-start; gap:10px;
   }
-  .card-title { font-size:16px; font-weight:700; line-height:1.3; }
-  .badge-row { display:flex; flex-wrap:wrap; gap:6px; justify-content:flex-end; }
-  .badge {
-    padding:4px 10px; border-radius:8px; font-size:11px; font-weight:700; text-transform:uppercase;
-    white-space:nowrap;
+  .card-identity { font-size:18px; font-weight:800; line-height:1.25; }
+  .card-when {
+    margin-top:8px; font-size:16px; font-weight:700; color: var(--text);
+    display:flex; align-items:center; gap:8px;
   }
-  .badge-urgent { background: rgba(239,68,68,0.15); color: var(--urgent); border:1px solid rgba(239,68,68,0.3); }
-  .badge-warning { background: rgba(249,115,22,0.15); color: var(--warning); border:1px solid rgba(249,115,22,0.3); }
-  .badge-normal { background: rgba(59,130,246,0.15); color: var(--accent-2); border:1px solid rgba(59,130,246,0.3); }
-  .badge-done { background: rgba(34,197,94,0.15); color: var(--success); border:1px solid rgba(34,197,94,0.3); }
-  .badge-queued { background: rgba(59,130,246,0.15); color: var(--accent-2); border:1px solid rgba(59,130,246,0.3); }
-  .badge-onsite { background: rgba(34,197,94,0.15); color: var(--success); border:1px solid rgba(34,197,94,0.3); }
-  .badge-waiting { background: rgba(168,85,247,0.15); color: var(--waiting); border:1px solid rgba(168,85,247,0.3); }
-  .card-meta {
-    display:flex; flex-wrap:wrap; gap:12px; margin-bottom:10px;
-    font-size:13px; color: var(--text-dim);
+  .card-when.overdue { color: var(--urgent); }
+  .card-where {
+    margin-top:4px; font-size:15px; font-weight:600; color: var(--text-dim);
+    line-height:1.35;
   }
-  .meta-item { display:flex; align-items:center; gap:5px; }
-  .meta-item svg { width:14px; height:14px; opacity:0.7; flex-shrink:0; }
-  .meta-item a { color: inherit; text-decoration: none; }
-  .meta-item a:active { color: var(--accent); }
-  .card-notes {
-    margin-top:8px; padding:10px 12px; border-radius:10px;
-    background: var(--surface-2); border:1px solid var(--border);
-    font-size:13px; color: var(--text-dim); line-height:1.4;
+  .card-job {
+    margin-top:12px; font-size:15px; font-weight:600; line-height:1.4; color: var(--text);
   }
-  .card-tools {
-    display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;
+  .who-chip {
+    flex-shrink:0; min-height:44px; padding: 8px 12px; border-radius: 999px;
+    border:1px solid var(--border); background: var(--surface-2);
+    color: var(--text-dim); font-size:13px; font-weight:800; cursor:pointer;
+    max-width: 42%;
   }
-  .tool-tag {
-    background: var(--surface-2); border:1px solid var(--border);
-    padding:4px 10px; border-radius:8px; font-size:12px; color: var(--text-dim);
+  .who-chip.assigned {
+    background: rgba(245,158,11,0.16); border-color: rgba(245,158,11,0.45); color: var(--accent);
+  }
+  .urgent-pill {
+    display:inline-block; margin-top:8px;
+    padding: 4px 10px; border-radius: 8px; font-size:11px; font-weight:800;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    background: rgba(239,68,68,0.15); color: var(--urgent); border:1px solid rgba(239,68,68,0.35);
   }
   .card-actions {
-    display:flex; gap:8px; margin-top:12px; padding-top:12px;
-    border-top:1px solid var(--border);
+    display:flex; gap:8px; margin-top:14px;
   }
+  .card-details { display:none; margin-top:12px; padding-top:12px; border-top:1px solid var(--border); }
+  .card.expanded .card-details { display:block; }
+  .card-notes {
+    padding:12px; border-radius:12px;
+    background: var(--surface-2); border:1px solid var(--border);
+    font-size:14px; color: var(--text-dim); line-height:1.45; margin-bottom:10px;
+  }
+  .card-tools { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+  .tool-tag {
+    background: var(--surface-2); border:1px solid var(--border);
+    padding:6px 10px; border-radius:8px; font-size:12px; color: var(--text-dim); font-weight:600;
+  }
+  .details-actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .details-actions .btn { flex:1 1 40%; }
+  .details-toggle {
+    width:100%; margin-top:4px; min-height:44px;
+    background:none; border:none; color: var(--text-dim);
+    font: inherit; font-size:13px; font-weight:700; cursor:pointer;
+  }
+  .card.expanded .details-toggle { color: var(--accent); }
+
   .btn {
-    flex:1; padding:10px; border-radius:10px; border:none;
-    font-size:13px; font-weight:700; cursor:pointer; text-align:center;
-    transition: all 0.2s;
+    flex:1; min-height:48px; padding:12px 14px; border-radius:12px; border:none;
+    font-size:15px; font-weight:800; cursor:pointer; text-align:center;
+    display:flex; align-items:center; justify-content:center;
+    text-decoration:none; color: inherit;
   }
   .btn-primary { background: var(--accent); color:#000; }
   .btn-ghost { background: var(--surface-2); color: var(--text); border:1px solid var(--border); }
   .btn-danger { background: rgba(239,68,68,0.15); color: var(--urgent); border:1px solid rgba(239,68,68,0.3); }
-  .btn-success { background: rgba(34,197,94,0.15); color: var(--success); border:1px solid rgba(34,197,94,0.3); }
-  .btn:active { transform: scale(0.96); opacity:0.8; }
-  .btn-sm { padding:8px 12px; flex:0 0 auto; font-size:12px; }
-  .filter-row {
-    display:flex; gap:8px; overflow-x:auto; margin-bottom:14px; scrollbar-width:none;
-  }
-  .filter-row::-webkit-scrollbar { display:none; }
-  .filter-chip {
-    flex-shrink:0; padding:6px 12px; border-radius:16px;
+  .btn-success { background: var(--success); color:#052e16; }
+  .btn-wait { background: rgba(168,85,247,0.16); color: #e9d5ff; border:1px solid rgba(168,85,247,0.35); }
+  .btn:active { transform: scale(0.98); opacity:0.9; }
+  .btn-sm { min-height:44px; padding:10px 12px; flex:0 0 auto; font-size:13px; }
+
+  .truck-hero {
     background: var(--surface); border:1px solid var(--border);
-    font-size:12px; font-weight:600; color: var(--text-dim); cursor:pointer;
+    border-radius: var(--radius); padding: 16px; margin-bottom: 14px;
   }
-  .filter-chip.active { border-color: var(--accent); color: var(--accent); background: rgba(245,158,11,0.1); }
+  .truck-hero-top { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .truck-hero-label { font-size:18px; font-weight:800; }
+  .truck-hero-label.ready { color: var(--success); }
+  .truck-bar { height:10px; border-radius:999px; background: var(--surface-2); margin-top:12px; overflow:hidden; }
+  .truck-bar > div { height:100%; background: var(--accent); border-radius:999px; }
   .tool-cat {
     background: var(--surface); border:1px solid var(--border);
     border-radius: var(--radius); margin-bottom:12px; overflow:hidden;
   }
   .tool-cat-header {
-    padding:14px 16px; background: var(--surface-2);
+    padding:16px; background: var(--surface-2);
     display:flex; justify-content:space-between; align-items:center;
-    cursor:pointer; font-weight:700; font-size:14px;
+    cursor:pointer; font-weight:800; font-size:15px; min-height:52px;
   }
   .tool-cat-header::after {
     content: '▼'; font-size:10px; color: var(--text-dim);
@@ -159,30 +198,51 @@
   }
   .tool-cat.collapsed .tool-cat-header::after { transform: rotate(-90deg); }
   .tool-cat.collapsed .tool-cat-body { display:none; }
-  .tool-cat-body { padding:12px 16px; }
+  .tool-cat-body { padding: 4px 16px 12px; }
   .tool-check {
-    display:flex; align-items:center; gap:10px; padding:8px 0;
-    border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:12px; padding:12px 0;
+    border-bottom:1px solid var(--border); min-height:48px; cursor:pointer;
   }
   .tool-check:last-child { border-bottom:none; }
   .check-box {
-    width:22px; height:22px; border-radius:6px; border:2px solid var(--border);
-    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    width:28px; height:28px; border-radius:8px; border:2px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
     flex-shrink:0; transition: all 0.15s;
   }
   .check-box.checked { background: var(--accent); border-color: var(--accent); }
-  .check-box.checked::after { content: '✓'; color:#000; font-weight:800; font-size:13px; }
+  .check-box.checked::after { content: '✓'; color:#000; font-weight:800; font-size:16px; }
   .tool-check.checked span { text-decoration: line-through; opacity:0.5; }
+  .tool-check span { font-size:15px; font-weight:600; }
+
   .fab {
-    position:fixed; bottom:24px; right:24px; z-index:200;
+    position:fixed; right:20px; z-index:200;
+    bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 12px);
     width:60px; height:60px; border-radius:50%;
     background: var(--accent); color:#000; border:none;
-    font-size:28px; font-weight:300; cursor:pointer;
+    font-size:32px; font-weight:300; cursor:pointer;
     box-shadow: 0 6px 24px rgba(245,158,11,0.4);
     display:flex; align-items:center; justify-content:center;
-    transition: transform 0.2s;
   }
-  .fab:active { transform: scale(0.9); }
+  .fab[hidden] { display:none !important; }
+  .fab:active { transform: scale(0.92); }
+
+  .tabbar {
+    position:fixed; left:0; right:0; bottom:0; z-index:180;
+    display:grid; grid-template-columns: 1fr 1fr 1fr;
+    padding: 6px 8px var(--safe-bottom);
+    min-height: calc(var(--tabbar-h) + var(--safe-bottom));
+    background: rgba(15, 20, 32, 0.94);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+  }
+  .tabbar-btn {
+    min-height:52px; border:none; background:transparent;
+    color: var(--text-dim); font: inherit; font-weight:800; font-size:14px;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    border-radius:12px;
+  }
+  .tabbar-btn.active { color: var(--accent); background: rgba(245,158,11,0.1); }
+
   .modal-overlay {
     position:fixed; inset:0; background: rgba(0,0,0,0.7);
     backdrop-filter: blur(8px); z-index:300;
@@ -192,168 +252,161 @@
   .modal {
     background: var(--surface); width:100%; max-width:500px;
     border-radius: var(--radius) var(--radius) 0 0;
-    padding: 20px; max-height: 90vh; overflow-y:auto;
-    animation: slideUp 0.3s ease;
+    padding: 20px 20px calc(16px + var(--safe-bottom));
+    max-height: 92vh; overflow-y:auto;
+    animation: slideUp 0.28s ease;
   }
   @keyframes slideUp { from { transform:translateY(100%);} to { transform:translateY(0);} }
-  .modal-title { font-size:20px; font-weight:800; margin-bottom:16px; }
+  .modal-title { font-size:22px; font-weight:800; margin-bottom:16px; }
   .form-group { margin-bottom:14px; }
-  .form-label { display:block; font-size:13px; font-weight:600; color:var(--text-dim); margin-bottom:6px; text-transform:uppercase; }
+  .form-label { display:block; font-size:13px; font-weight:700; color:var(--text-dim); margin-bottom:6px; }
   .form-input, .form-select, .form-textarea {
-    width:100%; padding:12px 14px; border-radius:10px;
+    width:100%; padding:14px; border-radius:12px; min-height:48px;
     background: var(--surface-2); border:1px solid var(--border);
-    color: var(--text); font-size:15px; font-family:inherit;
-    outline:none; transition: border-color 0.2s;
+    color: var(--text); font-size:16px; font-family:inherit;
+    outline:none;
   }
   .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
-  .form-textarea { min-height:80px; resize:vertical; }
+  .form-textarea { min-height:88px; resize:vertical; }
   .form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .modal-actions { display:flex; gap:10px; margin-top:20px; }
+  .chip-row { display:flex; flex-wrap:wrap; gap:8px; }
+  .choice-chip {
+    min-height:44px; padding: 10px 14px; border-radius: 999px;
+    border:1px solid var(--border); background: var(--surface-2);
+    color: var(--text); font: inherit; font-size:14px; font-weight:800; cursor:pointer;
+  }
+  .choice-chip.active { background: var(--accent); color:#000; border-color: var(--accent); }
+  .more-toggle {
+    width:100%; min-height:44px; margin: 4px 0 10px;
+    background:none; border:none; color: var(--accent);
+    font: inherit; font-size:14px; font-weight:800; cursor:pointer; text-align:left;
+  }
+  .form-more { display:none; }
+  .form-more.open { display:block; }
+  .check-row {
+    display:flex; align-items:center; gap:12px; min-height:48px;
+    padding: 8px 0; cursor:pointer; font-weight:700;
+  }
+  .check-row input { width:22px; height:22px; accent-color: var(--accent); }
+  .modal-actions {
+    display:flex; gap:10px; margin-top:8px; position:sticky; bottom:0;
+    background: var(--surface); padding-top:12px;
+  }
   .modal-actions .btn { padding:14px; }
-  .hint {
-    text-align:center; font-size:12px; color: var(--text-dim);
-    padding: 8px; opacity:0.6;
-  }
-  .archive-card { opacity:0.75; }
-  .archive-card .card-title { text-decoration: line-through; }
-  .share-btn {
-    background: var(--surface-2); border:1px solid var(--border);
-    width:36px; height:36px; border-radius:10px;
-    display:flex; align-items:center; justify-content:center;
-    color: var(--text); cursor:pointer;
-  }
-  .empty-state {
-    text-align:center; padding: 40px 20px; color: var(--text-dim);
-  }
+  .hint { text-align:center; font-size:12px; color: var(--text-dim); padding: 8px; opacity:0.7; }
+  .empty-state { text-align:center; padding: 48px 20px; color: var(--text-dim); }
   .empty-state svg { width:48px; height:48px; margin-bottom:12px; opacity:0.4; }
-  .empty-state p { font-size:14px; }
+  .empty-state p { font-size:15px; font-weight:600; }
   .toast {
-    position:fixed; top:20px; left:50%; transform:translateX(-50%) translateY(-100px);
+    position:fixed; top: calc(64px + var(--safe-top)); left:50%;
+    transform:translateX(-50%) translateY(-160px);
     background: var(--surface-2); border:1px solid var(--border);
-    padding:12px 24px; border-radius:12px; font-weight:600; z-index:400;
+    padding:12px 24px; border-radius:12px; font-weight:700; z-index:400;
     box-shadow: var(--shadow); transition: transform 0.3s ease;
-    display:flex; align-items:center; gap:8px;
   }
   .toast.show { transform:translateX(-50%) translateY(0); }
-  .team-line {
-    font-size:12px; color: var(--text-dim); margin-top:2px;
+  .archive-day {
+    font-size:12px; font-weight:800; color: var(--text-dim);
+    margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.04em;
   }
+  .archive-day:first-child { margin-top: 0; }
+  .archive-card { padding: 14px 16px; border-left-color: var(--border); }
+  .archive-meta { margin-top:6px; font-size:13px; color: var(--text-dim); font-weight:600; }
+  .archive-actions { display:flex; gap:8px; margin-top:12px; }
 </style>
 </head>
 <body>
 
 <div class="header">
   <div class="header-top">
-    <div>
-      <div class="logo">Shop<span>Flow</span></div>
-      <div class="team-line">Antonio &amp; Anthony</div>
-    </div>
-    <div style="display:flex;gap:8px;align-items:center;">
+    <div class="logo">Shop<span>Flow</span></div>
+    <div class="header-right">
       <div class="date-badge" id="currentDate">Loading...</div>
-      <button class="share-btn" onclick="shareBoard()" title="Share Board" aria-label="Share board">
-        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-      </button>
+      <button class="icon-btn" type="button" onclick="toggleHeaderMenu(event)" title="More" aria-label="More">⋯</button>
+      <div class="header-menu" id="headerMenu">
+        <button type="button" onclick="shareBoard()">Share today's board</button>
+      </div>
     </div>
-  </div>
-  <div class="nav-pills" id="navPills">
-    <div class="pill active" data-tab="jobs" onclick="switchTab('jobs')">Jobs <span class="count" id="jobCount">0</span></div>
-    <div class="pill" data-tab="tools" onclick="switchTab('tools')">Truck</div>
-    <div class="pill" data-tab="archive" onclick="switchTab('archive')">Done <span class="count" id="archiveCount">0</span></div>
   </div>
 </div>
 
 <div class="section active" id="jobsSection">
-  <div class="section-title">Active Jobs</div>
-  <div class="filter-row" id="statusFilters">
-    <button class="filter-chip active" data-filter="all" onclick="setStatusFilter('all')">All</button>
-    <button class="filter-chip" data-filter="queued" onclick="setStatusFilter('queued')">Queued</button>
-    <button class="filter-chip" data-filter="onsite" onclick="setStatusFilter('onsite')">On site</button>
-    <button class="filter-chip" data-filter="waiting" onclick="setStatusFilter('waiting')">Waiting parts</button>
-  </div>
   <div id="jobsList"></div>
-  <div class="hint">Tap + to add a job</div>
 </div>
 
 <div class="section" id="toolsSection">
-  <div class="section-title">
-    <span>Truck Checklist</span>
-    <button class="btn btn-ghost btn-sm" type="button" onclick="resetTruckChecklist()">Reset for today</button>
-  </div>
   <div id="toolsList"></div>
   <div class="hint">Check gear before you roll. Reset clears checks for a new day.</div>
 </div>
 
 <div class="section" id="archiveSection">
-  <div class="section-title">Completed Jobs</div>
   <div id="archiveList"></div>
   <div class="hint">History stays on this phone until you delete it.</div>
 </div>
 
-<button class="fab" onclick="openModal()" aria-label="Add job">+</button>
+<button class="fab" id="fab" onclick="openModal()" aria-label="Add job">+</button>
+
+<nav class="tabbar" aria-label="Main">
+  <button type="button" class="tabbar-btn active" data-tab="jobs" onclick="switchTab('jobs')">Jobs</button>
+  <button type="button" class="tabbar-btn" data-tab="tools" onclick="switchTab('tools')">Tools</button>
+  <button type="button" class="tabbar-btn" data-tab="archive" onclick="switchTab('archive')">Done</button>
+</nav>
 
 <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
   <div class="modal">
     <div class="modal-title" id="modalTitle">New Job</div>
     <form id="jobForm" onsubmit="saveJob(event)">
-      <div class="form-group">
-        <label class="form-label">Customer Name</label>
-        <input type="text" class="form-input" id="custName" placeholder="e.g. Mike Johnson" required>
-      </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Phone</label>
-          <input type="tel" class="form-input" id="custPhone" placeholder="(555) 000-0000">
+          <label class="form-label" for="custName">Customer</label>
+          <input type="text" class="form-input" id="custName" placeholder="Mike Johnson" autocomplete="name" required>
         </div>
         <div class="form-group">
-          <label class="form-label">Vehicle</label>
-          <input type="text" class="form-input" id="custVehicle" placeholder="e.g. 2015 Mustang">
+          <label class="form-label" for="custPhone">Phone</label>
+          <input type="tel" class="form-input" id="custPhone" placeholder="(555) 000-0000" autocomplete="tel">
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Address / Location</label>
-        <input type="text" class="form-input" id="jobAddress" placeholder="123 Main St or customer notes">
+        <label class="form-label" for="custVehicle">Vehicle</label>
+        <input type="text" class="form-input" id="custVehicle" placeholder="2015 Mustang" autocomplete="off">
       </div>
       <div class="form-group">
-        <label class="form-label">Scheduled</label>
-        <input type="datetime-local" class="form-input" id="jobWhen">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Job Description</label>
+        <label class="form-label" for="jobDesc">What's the job</label>
         <textarea class="form-textarea" id="jobDesc" placeholder="Brake pads, noise diag, oil change..." required></textarea>
       </div>
-      <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" for="jobAddress">Address</label>
+        <input type="text" class="form-input" id="jobAddress" placeholder="123 Main St" autocomplete="street-address">
+      </div>
+      <div class="form-group">
+        <label class="form-label">When</label>
+        <div class="chip-row" id="whenChips">
+          <button type="button" class="choice-chip" data-when="now" onclick="setWhenChip('now')">Now</button>
+          <button type="button" class="choice-chip" data-when="later" onclick="setWhenChip('later')">Later today</button>
+          <button type="button" class="choice-chip" data-when="tomorrow" onclick="setWhenChip('tomorrow')">Tomorrow</button>
+          <button type="button" class="choice-chip" data-when="pick" onclick="setWhenChip('pick')">Pick time</button>
+        </div>
+        <input type="datetime-local" class="form-input" id="jobWhen" hidden style="margin-top:8px">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Who's going</label>
+        <div class="chip-row" id="whoChips">
+          <button type="button" class="choice-chip" data-who="antonio" onclick="setFormWho('antonio')">Antonio</button>
+          <button type="button" class="choice-chip" data-who="anthony" onclick="setFormWho('anthony')">Anthony</button>
+        </div>
+      </div>
+      <button type="button" class="more-toggle" id="moreToggle" onclick="toggleFormMore()">More — urgent, tools, notes</button>
+      <div class="form-more" id="formMore">
+        <label class="check-row"><input type="checkbox" id="jobUrgent"> Mark urgent</label>
+        <label class="check-row"><input type="checkbox" id="jobOnsiteNow"> I'm already there</label>
         <div class="form-group">
-          <label class="form-label">Priority</label>
-          <select class="form-select" id="jobPriority">
-            <option value="urgent">Urgent</option>
-            <option value="warning">Priority</option>
-            <option value="normal" selected>Standard</option>
-          </select>
+          <label class="form-label" for="jobTools">Tools / parts</label>
+          <input type="text" class="form-input" id="jobTools" placeholder="Torque wrench, pads, scanner...">
         </div>
         <div class="form-group">
-          <label class="form-label">Who's on it</label>
-          <select class="form-select" id="jobAssign">
-            <option value="">Either</option>
-            <option value="antonio">Antonio</option>
-            <option value="anthony">Anthony</option>
-          </select>
+          <label class="form-label" for="jobNotes">Notes</label>
+          <textarea class="form-textarea" id="jobNotes" placeholder="Park in driveway, dog in yard..."></textarea>
         </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Status</label>
-        <select class="form-select" id="jobStatus">
-          <option value="queued" selected>Queued</option>
-          <option value="onsite">On site</option>
-          <option value="waiting">Waiting parts</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Tools / Parts Needed</label>
-        <input type="text" class="form-input" id="jobTools" placeholder="Torque wrench, pads, scanner...">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Notes</label>
-        <textarea class="form-textarea" id="jobNotes" placeholder="Noise only when cold, park in driveway..."></textarea>
       </div>
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button>
@@ -396,12 +449,6 @@ const STATUS_LABELS = {
   waiting: 'Waiting parts'
 };
 
-const PRIORITY_LABELS = {
-  urgent: 'Urgent',
-  warning: 'Priority',
-  normal: 'Standard'
-};
-
 let data = {
   version: 2,
   jobs: [],
@@ -411,7 +458,9 @@ let data = {
 };
 
 let editingId = null;
-let statusFilter = 'all';
+let formWho = '';
+let expandedIds = new Set();
+let currentTab = 'jobs';
 
 function init() {
   const saved = localStorage.getItem('shopflow_data');
@@ -423,13 +472,15 @@ function init() {
   updateDate();
   renderAll();
   setInterval(updateDate, 60000);
+  document.addEventListener('click', () => closeHeaderMenu());
+  document.getElementById('jobsList').addEventListener('click', onJobsClick);
+  document.getElementById('archiveList').addEventListener('click', onArchiveClick);
 }
 
 function migrate(parsed) {
   const jobs = Array.isArray(parsed.jobs) ? parsed.jobs : [];
   const archive = Array.isArray(parsed.archive) ? parsed.archive : [];
 
-  // Deduplicate archive restore bug: drop archived copies still sitting in jobs
   const activeJobs = jobs
     .filter(j => !j.archived)
     .map(normalizeJob);
@@ -451,7 +502,6 @@ function normalizeJob(job) {
   const status = ['queued', 'onsite', 'waiting'].includes(job.status) ? job.status : 'queued';
   let assignedTo = job.assignedTo || '';
   if (assignedTo && !TECHS.some(t => t.id === assignedTo)) {
-    // Map old fake crew ids loosely, otherwise clear
     const old = String(assignedTo);
     if (old === 'm1') assignedTo = 'antonio';
     else if (old === 'm2') assignedTo = 'anthony';
@@ -486,125 +536,202 @@ function updateDate() {
 }
 
 function switchTab(tab) {
-  document.querySelectorAll('.pill').forEach(p => p.classList.toggle('active', p.dataset.tab === tab));
+  currentTab = tab;
+  document.querySelectorAll('.tabbar-btn').forEach(p => p.classList.toggle('active', p.dataset.tab === tab));
   document.querySelectorAll('.section').forEach(s => s.classList.toggle('active', s.id === tab + 'Section'));
+  document.getElementById('fab').hidden = tab !== 'jobs';
+  closeHeaderMenu();
 }
 
-function setStatusFilter(filter) {
-  statusFilter = filter;
-  document.querySelectorAll('#statusFilters .filter-chip').forEach(c => {
-    c.classList.toggle('active', c.dataset.filter === filter);
-  });
-  renderJobs();
+function toggleHeaderMenu(e) {
+  e.stopPropagation();
+  document.getElementById('headerMenu').classList.toggle('open');
+}
+
+function closeHeaderMenu() {
+  document.getElementById('headerMenu')?.classList.remove('open');
 }
 
 function techName(id) {
   return TECHS.find(t => t.id === id)?.name || '';
 }
 
+function toLocalInput(d) {
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 function formatWhen(when) {
   if (!when) return '';
   const d = new Date(when);
   if (Number.isNaN(d.getTime())) return when;
+  const time = d.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit' });
+  const now = new Date();
+  const today = now.toDateString();
+  const tom = new Date(now);
+  tom.setDate(tom.getDate() + 1);
+  if (d.toDateString() === today) return 'Today ' + time;
+  if (d.toDateString() === tom.toDateString()) return 'Tomorrow ' + time;
   return d.toLocaleString('en-US', {
     weekday: 'short', month: 'short', day: 'numeric',
     hour: 'numeric', minute: '2-digit'
   });
 }
 
+function isOverdue(job) {
+  if (!job.when || job.status === 'onsite') return false;
+  const d = new Date(job.when);
+  return !Number.isNaN(d.getTime()) && d.getTime() < Date.now() - 45 * 60 * 1000;
+}
+
 function mapsUrl(address) {
   return 'https://maps.apple.com/?q=' + encodeURIComponent(address);
 }
 
-function renderJobs() {
-  const list = document.getElementById('jobsList');
-  let active = data.jobs.slice();
-  document.getElementById('jobCount').textContent = active.length;
+function telHref(phone) {
+  return 'tel:' + String(phone).replace(/[^\d+]/g, '');
+}
 
-  if (statusFilter !== 'all') {
-    active = active.filter(j => j.status === statusFilter);
-  }
-
-  if (!data.jobs.length) {
-    list.innerHTML = `
-      <div class="empty-state">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-        <p>No active jobs. Tap + to add one.</p>
-      </div>`;
-    return;
-  }
-
-  if (!active.length) {
-    list.innerHTML = `
-      <div class="empty-state">
-        <p>No jobs in this status.</p>
-      </div>`;
-    return;
-  }
-
+function sortJobs(jobs) {
   const priorityOrder = { urgent: 0, warning: 1, normal: 2 };
-  active.sort((a, b) => {
-    const pa = priorityOrder[a.priority] - priorityOrder[b.priority];
+  return jobs.slice().sort((a, b) => {
+    const pa = (priorityOrder[a.priority] ?? 2) - (priorityOrder[b.priority] ?? 2);
     if (pa !== 0) return pa;
     const wa = a.when ? new Date(a.when).getTime() : Infinity;
     const wb = b.when ? new Date(b.when).getTime() : Infinity;
     return wa - wb;
   });
+}
 
-  list.innerHTML = active.map(job => {
-    const who = techName(job.assignedTo);
-    const tools = job.tools ? job.tools.split(',').map(t => t.trim()).filter(Boolean) : [];
-    return `
-      <div class="card" data-id="${job.id}">
-        <div class="card-header">
-          <div class="card-title">${esc(job.desc)}</div>
-          <div class="badge-row">
-            <div class="badge badge-${job.status}">${STATUS_LABELS[job.status] || job.status}</div>
-            <div class="badge badge-${job.priority}">${PRIORITY_LABELS[job.priority] || job.priority}</div>
-          </div>
-        </div>
-        <div class="card-meta">
-          <div class="meta-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            ${esc(job.customer)}
-          </div>
-          ${job.phone ? `<div class="meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg><a href="tel:${esc(job.phone)}">${esc(job.phone)}</a></div>` : ''}
-          ${job.vehicle ? `<div class="meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg>${esc(job.vehicle)}</div>` : ''}
-          ${job.address ? `<div class="meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><a href="${mapsUrl(job.address)}" target="_blank" rel="noopener">${esc(job.address)}</a></div>` : ''}
-          ${job.when ? `<div class="meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${esc(formatWhen(job.when))}</div>` : ''}
-          ${who ? `<div class="meta-item" style="color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>${esc(who)}</div>` : ''}
-        </div>
-        ${job.notes ? `<div class="card-notes">${esc(job.notes)}</div>` : ''}
-        ${tools.length ? `<div class="card-tools">${tools.map(t => `<span class="tool-tag">${esc(t)}</span>`).join('')}</div>` : ''}
-        <div class="card-actions">
-          <button class="btn btn-ghost" type="button" onclick="cycleJobStatus('${job.id}')">${nextStatusLabel(job.status)}</button>
-          <button class="btn btn-ghost" type="button" onclick="editJob('${job.id}')">Edit</button>
-          <button class="btn btn-success" type="button" onclick="archiveJob('${job.id}')">Complete</button>
-        </div>
-      </div>
-    `;
+function renderJobs() {
+  const list = document.getElementById('jobsList');
+
+  if (!data.jobs.length) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+        <p>No jobs yet. Tap + to add one.</p>
+      </div>`;
+    return;
+  }
+
+  const groups = [
+    { key: 'onsite', title: 'On site', jobs: sortJobs(data.jobs.filter(j => j.status === 'onsite')) },
+    { key: 'waiting', title: 'Waiting parts', jobs: sortJobs(data.jobs.filter(j => j.status === 'waiting')) },
+    { key: 'queued', title: 'Up next', jobs: sortJobs(data.jobs.filter(j => j.status === 'queued')) }
+  ];
+
+  list.innerHTML = groups.map(g => {
+    if (!g.jobs.length) return '';
+    return `<div class="job-group">
+      <div class="group-title"><span class="dot dot-${g.key}"></span>${g.title} <span class="n">${g.jobs.length}</span></div>
+      ${g.jobs.map(jobCardHtml).join('')}
+    </div>`;
   }).join('');
 }
 
-function nextStatusLabel(status) {
-  if (status === 'queued') return '→ On site';
-  if (status === 'onsite') return '→ Waiting';
-  return '→ Queued';
+function jobCardHtml(job) {
+  const who = techName(job.assignedTo);
+  const tools = job.tools ? job.tools.split(',').map(t => t.trim()).filter(Boolean) : [];
+  const identity = [job.customer, job.vehicle].filter(Boolean).join(' · ');
+  const expanded = expandedIds.has(job.id);
+  const overdue = isOverdue(job);
+  let primary;
+  if (job.status === 'queued') {
+    primary = `<button class="btn btn-primary" type="button" data-act="onsite">On site</button>`;
+  } else if (job.status === 'onsite') {
+    primary = `<button class="btn btn-success" type="button" data-act="done">Done</button>`;
+  } else {
+    primary = `<button class="btn btn-primary" type="button" data-act="queued">Back on it</button>`;
+  }
+
+  const call = job.phone
+    ? `<a class="btn btn-ghost" href="${telHref(job.phone)}">Call</a>`
+    : '';
+  const maps = job.address
+    ? `<a class="btn btn-ghost" href="${mapsUrl(job.address)}" target="_blank" rel="noopener">Maps</a>`
+    : '';
+
+  const waitBtn = job.status !== 'waiting'
+    ? `<button class="btn btn-wait" type="button" data-act="waiting">Waiting parts</button>`
+    : '';
+  const doneInDetails = job.status !== 'onsite'
+    ? `<button class="btn btn-success" type="button" data-act="done">Done</button>`
+    : '';
+
+  return `
+    <div class="card status-${job.status}${expanded ? ' expanded' : ''}" data-id="${esc(job.id)}">
+      <div class="card-top">
+        <div class="card-identity">${esc(identity || 'Job')}</div>
+        <button class="who-chip${who ? ' assigned' : ''}" type="button" data-act="assign">${esc(who || 'Who?')}</button>
+      </div>
+      ${job.when ? `<div class="card-when${overdue ? ' overdue' : ''}">${esc(formatWhen(job.when))}</div>` : ''}
+      ${job.address ? `<div class="card-where">${esc(job.address)}</div>` : ''}
+      <div class="card-job">${esc(job.desc)}</div>
+      ${job.priority === 'urgent' ? '<div class="urgent-pill">Urgent</div>' : ''}
+      ${(call || maps) ? `<div class="card-actions">${call}${maps}</div>` : ''}
+      <div class="card-actions">${primary}</div>
+      <div class="card-details">
+        ${job.notes ? `<div class="card-notes">${esc(job.notes)}</div>` : ''}
+        ${tools.length ? `<div class="card-tools">${tools.map(t => `<span class="tool-tag">${esc(t)}</span>`).join('')}</div>` : ''}
+        <div class="details-actions">
+          ${waitBtn}
+          ${doneInDetails}
+          <button class="btn btn-ghost" type="button" data-act="edit">Edit</button>
+        </div>
+      </div>
+      <button class="details-toggle" type="button" data-act="expand">${expanded ? 'Hide details' : 'Details'}</button>
+    </div>`;
 }
 
-function cycleJobStatus(id) {
+function onJobsClick(e) {
+  const actEl = e.target.closest('[data-act]');
+  if (!actEl) return;
+  const card = actEl.closest('.card');
+  if (!card) return;
+  const id = card.dataset.id;
+  const act = actEl.dataset.act;
+  if (act === 'onsite') setJobStatus(id, 'onsite');
+  else if (act === 'waiting') setJobStatus(id, 'waiting');
+  else if (act === 'queued') setJobStatus(id, 'queued');
+  else if (act === 'done') archiveJob(id);
+  else if (act === 'edit') editJob(id);
+  else if (act === 'expand') toggleExpand(id);
+  else if (act === 'assign') cycleAssign(id);
+}
+
+function toggleExpand(id) {
+  if (expandedIds.has(id)) expandedIds.delete(id);
+  else expandedIds.add(id);
+  const card = document.querySelector('.card[data-id="' + CSS.escape(id) + '"]');
+  if (!card) return;
+  const open = expandedIds.has(id);
+  card.classList.toggle('expanded', open);
+  const toggle = card.querySelector('.details-toggle');
+  if (toggle) toggle.textContent = open ? 'Hide details' : 'Details';
+}
+
+function setJobStatus(id, status) {
   const job = data.jobs.find(j => j.id === id);
   if (!job) return;
-  const cycle = { queued: 'onsite', onsite: 'waiting', waiting: 'queued' };
-  job.status = cycle[job.status] || 'queued';
+  job.status = status;
   saveData();
   renderJobs();
-  showToast(`${job.customer}: ${STATUS_LABELS[job.status]}`);
+  showToast((job.customer || 'Job') + ': ' + (STATUS_LABELS[status] || status));
+}
+
+function cycleAssign(id) {
+  const job = data.jobs.find(j => j.id === id);
+  if (!job) return;
+  const order = ['', 'antonio', 'anthony'];
+  const i = order.indexOf(job.assignedTo || '');
+  job.assignedTo = order[(i < 0 ? 0 : i + 1) % order.length];
+  saveData();
+  renderJobs();
 }
 
 function renderArchive() {
   const list = document.getElementById('archiveList');
-  document.getElementById('archiveCount').textContent = data.archive.length;
 
   if (!data.archive.length) {
     list.innerHTML = `
@@ -615,59 +742,93 @@ function renderArchive() {
     return;
   }
 
-  list.innerHTML = data.archive.slice().reverse().map(job => {
-    const who = techName(job.assignedTo);
-    const doneDate = job.completedAt ? new Date(job.completedAt).toLocaleDateString() : 'Recently';
-    return `
-      <div class="card archive-card" data-id="${job.id}">
-        <div class="card-header">
-          <div class="card-title">${esc(job.desc)}</div>
-          <div class="badge badge-done">Done</div>
-        </div>
-        <div class="card-meta">
-          <div class="meta-item">${esc(job.customer)} • ${esc(job.vehicle || 'No vehicle')}</div>
-          ${job.address ? `<div class="meta-item">${esc(job.address)}</div>` : ''}
-          ${who ? `<div class="meta-item">${esc(who)}</div>` : ''}
-          <div class="meta-item">Completed: ${doneDate}</div>
-        </div>
-        <div class="card-actions">
-          <button class="btn btn-ghost" type="button" onclick="restoreJob('${job.id}')">Restore</button>
-          <button class="btn btn-danger" type="button" onclick="deleteJob('${job.id}', true)">Delete</button>
-        </div>
-      </div>
-    `;
+  const groups = [];
+  const sorted = data.archive.slice().sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
+  sorted.forEach(job => {
+    const label = job.completedAt
+      ? new Date(job.completedAt).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+      : 'Recently';
+    const last = groups[groups.length - 1];
+    if (!last || last.label !== label) groups.push({ label, jobs: [job] });
+    else last.jobs.push(job);
+  });
+
+  list.innerHTML = groups.map(g => {
+    return `<div class="archive-day">${esc(g.label)}</div>` + g.jobs.map(job => {
+      const who = techName(job.assignedTo);
+      const identity = [job.customer, job.vehicle].filter(Boolean).join(' · ');
+      return `
+        <div class="card archive-card" data-id="${esc(job.id)}">
+          <div class="card-identity" style="font-size:16px">${esc(identity || job.desc)}</div>
+          <div class="card-job" style="margin-top:6px;color:var(--text-dim)">${esc(job.desc)}</div>
+          ${who ? `<div class="archive-meta">${esc(who)}</div>` : ''}
+          <div class="archive-actions">
+            <button class="btn btn-ghost btn-sm" type="button" data-act="restore">Restore</button>
+            <button class="btn btn-danger btn-sm" type="button" data-act="delete">Delete</button>
+          </div>
+        </div>`;
+    }).join('');
   }).join('');
+}
+
+function onArchiveClick(e) {
+  const actEl = e.target.closest('[data-act]');
+  if (!actEl) return;
+  const card = actEl.closest('.card');
+  if (!card) return;
+  const id = card.dataset.id;
+  if (actEl.dataset.act === 'restore') restoreJob(id);
+  else if (actEl.dataset.act === 'delete') deleteJob(id, true);
 }
 
 function renderTools() {
   const list = document.getElementById('toolsList');
-  list.innerHTML = data.toolCategories.map((cat, ci) => {
+  const cats = data.toolCategories;
+  let total = 0;
+  let checked = 0;
+  cats.forEach((cat, ci) => {
+    cat.tools.forEach((_, ti) => {
+      total += 1;
+      if (data.toolState[`${ci}-${ti}`]) checked += 1;
+    });
+  });
+  const ready = total > 0 && checked === total;
+  const pct = total ? Math.round((checked / total) * 100) : 0;
+
+  const hero = `
+    <div class="truck-hero">
+      <div class="truck-hero-top">
+        <div class="truck-hero-label${ready ? ' ready' : ''}">${ready ? 'Ready to roll' : checked + ' / ' + total + ' packed'}</div>
+        <button class="btn btn-ghost btn-sm" type="button" onclick="resetTruckChecklist()">Reset</button>
+      </div>
+      <div class="truck-bar"><div style="width:${pct}%"></div></div>
+    </div>`;
+
+  list.innerHTML = hero + cats.map((cat, ci) => {
     const checkedCount = cat.tools.filter((_, ti) => data.toolState[`${ci}-${ti}`]).length;
     const isCollapsed = checkedCount === cat.tools.length && checkedCount > 0;
     return `
       <div class="tool-cat ${isCollapsed ? 'collapsed' : ''}" id="toolCat-${ci}">
         <div class="tool-cat-header" onclick="toggleToolCat(${ci})">
-          <span>${esc(cat.name)} <span style="color:var(--text-dim);font-weight:500;">(${checkedCount}/${cat.tools.length})</span></span>
+          <span>${esc(cat.name)} <span style="color:var(--text-dim);font-weight:600;">${checkedCount}/${cat.tools.length}</span></span>
         </div>
         <div class="tool-cat-body">
           ${cat.tools.map((tool, ti) => {
             const key = `${ci}-${ti}`;
-            const checked = data.toolState[key] ? 'checked' : '';
+            const on = data.toolState[key] ? 'checked' : '';
             return `
-              <div class="tool-check ${checked}" onclick="toggleTool('${key}')">
-                <div class="check-box ${checked}"></div>
+              <div class="tool-check ${on}" onclick="toggleTool('${key}')">
+                <div class="check-box ${on}"></div>
                 <span>${esc(tool)}</span>
-              </div>
-            `;
+              </div>`;
           }).join('')}
         </div>
-      </div>
-    `;
+      </div>`;
   }).join('');
 }
 
 function toggleToolCat(ci) {
-  document.getElementById(`toolCat-${ci}`).classList.toggle('collapsed');
+  document.getElementById('toolCat-' + ci).classList.toggle('collapsed');
 }
 
 function toggleTool(key) {
@@ -677,17 +838,68 @@ function toggleTool(key) {
 }
 
 function resetTruckChecklist() {
-  if (!confirm('Reset truck checklist for a new day?')) return;
+  if (!confirm('Reset tools checklist for a new day?')) return;
   data.toolState = {};
   saveData();
   renderTools();
   showToast('Checklist reset');
 }
 
+function setWhenChip(kind) {
+  document.querySelectorAll('#whenChips .choice-chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.when === kind);
+  });
+  const input = document.getElementById('jobWhen');
+  if (kind === 'pick') {
+    input.hidden = false;
+    if (!input.value) input.value = toLocalInput(new Date());
+    input.focus();
+    return;
+  }
+  input.hidden = true;
+  const now = new Date();
+  let d;
+  if (kind === 'now') {
+    d = now;
+  } else if (kind === 'later') {
+    d = new Date(now);
+    d.setHours(15, 0, 0, 0);
+    if (d.getTime() <= now.getTime()) {
+      d = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+      d.setMinutes(0, 0, 0);
+    }
+  } else {
+    d = new Date(now);
+    d.setDate(d.getDate() + 1);
+    d.setHours(9, 0, 0, 0);
+  }
+  input.value = toLocalInput(d);
+}
+
+function setFormWho(who) {
+  formWho = formWho === who ? '' : who;
+  document.querySelectorAll('#whoChips .choice-chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.who === formWho);
+  });
+}
+
+function toggleFormMore(force) {
+  const box = document.getElementById('formMore');
+  const open = force === true ? true : force === false ? false : !box.classList.contains('open');
+  box.classList.toggle('open', open);
+  document.getElementById('moreToggle').textContent = open ? 'Less details' : 'More — urgent, tools, notes';
+}
+
 function openModal(editId = null) {
   editingId = editId;
   document.getElementById('modalTitle').textContent = editId ? 'Edit Job' : 'New Job';
   document.getElementById('modalOverlay').classList.add('active');
+  document.getElementById('jobForm').reset();
+  formWho = '';
+  document.querySelectorAll('#whoChips .choice-chip').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('#whenChips .choice-chip').forEach(c => c.classList.remove('active'));
+  document.getElementById('jobWhen').hidden = true;
+  toggleFormMore(false);
 
   if (editId) {
     const job = data.jobs.find(j => j.id === editId);
@@ -698,15 +910,21 @@ function openModal(editId = null) {
     document.getElementById('jobAddress').value = job.address || '';
     document.getElementById('jobWhen').value = job.when || '';
     document.getElementById('jobDesc').value = job.desc;
-    document.getElementById('jobPriority').value = job.priority;
-    document.getElementById('jobAssign').value = job.assignedTo || '';
-    document.getElementById('jobStatus').value = job.status || 'queued';
     document.getElementById('jobTools').value = job.tools || '';
     document.getElementById('jobNotes').value = job.notes || '';
-  } else {
-    document.getElementById('jobForm').reset();
-    document.getElementById('jobPriority').value = 'normal';
-    document.getElementById('jobStatus').value = 'queued';
+    document.getElementById('jobUrgent').checked = job.priority === 'urgent';
+    document.getElementById('jobOnsiteNow').checked = job.status === 'onsite';
+    formWho = job.assignedTo || '';
+    document.querySelectorAll('#whoChips .choice-chip').forEach(c => {
+      c.classList.toggle('active', c.dataset.who === formWho);
+    });
+    if (job.when) {
+      document.getElementById('jobWhen').hidden = false;
+      document.querySelector('#whenChips [data-when="pick"]')?.classList.add('active');
+    }
+    if (job.tools || job.notes || job.priority === 'urgent' || job.status === 'onsite') {
+      toggleFormMore(true);
+    }
   }
 }
 
@@ -718,6 +936,13 @@ function closeModal() {
 function saveJob(e) {
   e.preventDefault();
   const existing = editingId ? data.jobs.find(j => j.id === editingId) : null;
+  let priority = existing?.priority === 'warning' ? 'warning' : 'normal';
+  if (document.getElementById('jobUrgent').checked) priority = 'urgent';
+  else if (existing?.priority === 'urgent') priority = 'normal';
+
+  let status = existing?.status || 'queued';
+  if (document.getElementById('jobOnsiteNow').checked) status = 'onsite';
+
   const job = normalizeJob({
     id: editingId || ('j' + Date.now()),
     customer: document.getElementById('custName').value.trim(),
@@ -726,9 +951,9 @@ function saveJob(e) {
     address: document.getElementById('jobAddress').value.trim(),
     when: document.getElementById('jobWhen').value,
     desc: document.getElementById('jobDesc').value.trim(),
-    priority: document.getElementById('jobPriority').value,
-    assignedTo: document.getElementById('jobAssign').value,
-    status: document.getElementById('jobStatus').value,
+    priority,
+    assignedTo: formWho,
+    status,
     tools: document.getElementById('jobTools').value.trim(),
     notes: document.getElementById('jobNotes').value.trim(),
     createdAt: existing?.createdAt || Date.now()
@@ -758,6 +983,7 @@ function archiveJob(id) {
   job.completedAt = Date.now();
   data.archive.push(job);
   data.jobs.splice(idx, 1);
+  expandedIds.delete(id);
   saveData();
   renderAll();
   showToast('Job completed');
@@ -768,11 +994,12 @@ function restoreJob(id) {
   if (idx < 0) return;
   const job = data.archive[idx];
   delete job.completedAt;
-  job.status = job.status || 'queued';
+  job.status = 'queued';
   data.jobs.push(job);
   data.archive.splice(idx, 1);
   saveData();
   renderAll();
+  switchTab('jobs');
   showToast('Job restored');
 }
 
@@ -808,6 +1035,7 @@ function showToast(msg) {
 }
 
 async function shareBoard() {
+  closeHeaderMenu();
   const active = data.jobs;
   const summary = [
     `ShopFlow — ${new Date().toLocaleDateString()}`,
@@ -825,7 +1053,7 @@ async function shareBoard() {
     `--- WAITING PARTS ---`,
     ...active.filter(j => j.status === 'waiting').map(formatShareJob),
     ``,
-    `--- QUEUED ---`,
+    `--- UP NEXT ---`,
     ...active.filter(j => j.status === 'queued').map(formatShareJob)
   ].join('\n');
 
