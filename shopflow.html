@@ -482,6 +482,8 @@ function init() {
   renderAll();
   setInterval(updateDate, 60000);
   document.addEventListener('click', () => closeHeaderMenu());
+  document.getElementById('jobsList').addEventListener('click', onJobsClick);
+  document.getElementById('archiveList').addEventListener('click', onArchiveClick);
 }
 
 function migrate(parsed) {
@@ -588,7 +590,7 @@ function formatWhen(when) {
 function isOverdue(job) {
   if (!job.when || job.status === 'onsite') return false;
   const d = new Date(job.when);
-  return !Number.isNaN(d.getTime()) && d.getTime() < Date.now();
+  return !Number.isNaN(d.getTime()) && d.getTime() < Date.now() - 45 * 60 * 1000;
 }
 
 function mapsUrl(address) {
@@ -608,10 +610,6 @@ function sortJobs(jobs) {
     const wb = b.when ? new Date(b.when).getTime() : Infinity;
     return wa - wb;
   });
-}
-
-function jid(id) {
-  return JSON.stringify(id);
 }
 
 function renderJobs() {
@@ -650,11 +648,11 @@ function jobCardHtml(job) {
   const overdue = isOverdue(job);
   let primary;
   if (job.status === 'queued') {
-    primary = `<button class="btn btn-primary" type="button" onclick="setJobStatus(${jid(job.id)}, 'onsite')">On site</button>`;
+    primary = `<button class="btn btn-primary" type="button" data-act="onsite">On site</button>`;
   } else if (job.status === 'onsite') {
-    primary = `<button class="btn btn-success" type="button" onclick="archiveJob(${jid(job.id)})">Done</button>`;
+    primary = `<button class="btn btn-success" type="button" data-act="done">Done</button>`;
   } else {
-    primary = `<button class="btn btn-primary" type="button" onclick="setJobStatus(${jid(job.id)}, 'queued')">Back on it</button>`;
+    primary = `<button class="btn btn-primary" type="button" data-act="queued">Back on it</button>`;
   }
 
   const call = job.phone
@@ -665,17 +663,17 @@ function jobCardHtml(job) {
     : '';
 
   const waitBtn = job.status !== 'waiting'
-    ? `<button class="btn btn-wait" type="button" onclick="setJobStatus(${jid(job.id)}, 'waiting')">Waiting parts</button>`
+    ? `<button class="btn btn-wait" type="button" data-act="waiting">Waiting parts</button>`
     : '';
   const doneInDetails = job.status !== 'onsite'
-    ? `<button class="btn btn-success" type="button" onclick="archiveJob(${jid(job.id)})">Done</button>`
+    ? `<button class="btn btn-success" type="button" data-act="done">Done</button>`
     : '';
 
   return `
     <div class="card status-${job.status}${expanded ? ' expanded' : ''}" data-id="${esc(job.id)}">
       <div class="card-top">
         <div class="card-identity">${esc(identity || 'Job')}</div>
-        <button class="who-chip${who ? ' assigned' : ''}" type="button" onclick="cycleAssign(${jid(job.id)})">${esc(who || 'Who?')}</button>
+        <button class="who-chip${who ? ' assigned' : ''}" type="button" data-act="assign">${esc(who || 'Who?')}</button>
       </div>
       ${job.when ? `<div class="card-when${overdue ? ' overdue' : ''}">${esc(formatWhen(job.when))}</div>` : ''}
       ${job.address ? `<div class="card-where">${esc(job.address)}</div>` : ''}
@@ -689,11 +687,27 @@ function jobCardHtml(job) {
         <div class="details-actions">
           ${waitBtn}
           ${doneInDetails}
-          <button class="btn btn-ghost" type="button" onclick="editJob(${jid(job.id)})">Edit</button>
+          <button class="btn btn-ghost" type="button" data-act="edit">Edit</button>
         </div>
       </div>
-      <button class="details-toggle" type="button" onclick="toggleExpand(${jid(job.id)})">${expanded ? 'Hide details' : 'Details'}</button>
+      <button class="details-toggle" type="button" data-act="expand">${expanded ? 'Hide details' : 'Details'}</button>
     </div>`;
+}
+
+function onJobsClick(e) {
+  const actEl = e.target.closest('[data-act]');
+  if (!actEl) return;
+  const card = actEl.closest('.card');
+  if (!card) return;
+  const id = card.dataset.id;
+  const act = actEl.dataset.act;
+  if (act === 'onsite') setJobStatus(id, 'onsite');
+  else if (act === 'waiting') setJobStatus(id, 'waiting');
+  else if (act === 'queued') setJobStatus(id, 'queued');
+  else if (act === 'done') archiveJob(id);
+  else if (act === 'edit') editJob(id);
+  else if (act === 'expand') toggleExpand(id);
+  else if (act === 'assign') cycleAssign(id);
 }
 
 function toggleExpand(id) {
@@ -760,12 +774,22 @@ function renderArchive() {
           <div class="card-job" style="margin-top:6px;color:var(--text-dim)">${esc(job.desc)}</div>
           ${who ? `<div class="archive-meta">${esc(who)}</div>` : ''}
           <div class="archive-actions">
-            <button class="btn btn-ghost btn-sm" type="button" onclick="restoreJob(${jid(job.id)})">Restore</button>
-            <button class="btn btn-danger btn-sm" type="button" onclick="deleteJob(${jid(job.id)}, true)">Delete</button>
+            <button class="btn btn-ghost btn-sm" type="button" data-act="restore">Restore</button>
+            <button class="btn btn-danger btn-sm" type="button" data-act="delete">Delete</button>
           </div>
         </div>`;
     }).join('');
   }).join('');
+}
+
+function onArchiveClick(e) {
+  const actEl = e.target.closest('[data-act]');
+  if (!actEl) return;
+  const card = actEl.closest('.card');
+  if (!card) return;
+  const id = card.dataset.id;
+  if (actEl.dataset.act === 'restore') restoreJob(id);
+  else if (actEl.dataset.act === 'delete') deleteJob(id, true);
 }
 
 function renderTools() {
