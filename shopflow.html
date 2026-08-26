@@ -348,7 +348,7 @@
 
 <nav class="tabbar" aria-label="Main">
   <button type="button" class="tabbar-btn active" data-tab="jobs" onclick="switchTab('jobs')">Jobs</button>
-  <button type="button" class="tabbar-btn" data-tab="tools" onclick="switchTab('tools')">Truck</button>
+  <button type="button" class="tabbar-btn" data-tab="tools" onclick="switchTab('tools')">Tools</button>
   <button type="button" class="tabbar-btn" data-tab="archive" onclick="switchTab('archive')">Done</button>
 </nav>
 
@@ -838,7 +838,7 @@ function toggleTool(key) {
 }
 
 function resetTruckChecklist() {
-  if (!confirm('Reset truck checklist for a new day?')) return;
+  if (!confirm('Reset tools checklist for a new day?')) return;
   data.toolState = {};
   saveData();
   renderTools();
