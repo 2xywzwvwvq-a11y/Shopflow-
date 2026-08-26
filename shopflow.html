@@ -237,12 +237,11 @@
   }
   .tabbar-btn {
     min-height:52px; border:none; background:transparent;
-    color: var(--text-dim); font: inherit; font-weight:800; font-size:13px;
-    cursor:pointer; display:flex; flex-direction:column; align-items:center;
-    justify-content:center; gap:2px; border-radius:12px;
+    color: var(--text-dim); font: inherit; font-weight:800; font-size:14px;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    border-radius:12px;
   }
   .tabbar-btn.active { color: var(--accent); background: rgba(245,158,11,0.1); }
-  .tabbar-count { font-size:11px; font-weight:800; opacity:0.8; }
 
   .modal-overlay {
     position:fixed; inset:0; background: rgba(0,0,0,0.7);
@@ -348,17 +347,9 @@
 <button class="fab" id="fab" onclick="openModal()" aria-label="Add job">+</button>
 
 <nav class="tabbar" aria-label="Main">
-  <button type="button" class="tabbar-btn active" data-tab="jobs" onclick="switchTab('jobs')">
-    <span>Jobs</span>
-    <span class="tabbar-count" id="jobCount">0</span>
-  </button>
-  <button type="button" class="tabbar-btn" data-tab="tools" onclick="switchTab('tools')">
-    <span>Truck</span>
-  </button>
-  <button type="button" class="tabbar-btn" data-tab="archive" onclick="switchTab('archive')">
-    <span>Done</span>
-    <span class="tabbar-count" id="archiveCount">0</span>
-  </button>
+  <button type="button" class="tabbar-btn active" data-tab="jobs" onclick="switchTab('jobs')">Jobs</button>
+  <button type="button" class="tabbar-btn" data-tab="tools" onclick="switchTab('tools')">Truck</button>
+  <button type="button" class="tabbar-btn" data-tab="archive" onclick="switchTab('archive')">Done</button>
 </nav>
 
 <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
@@ -614,7 +605,6 @@ function sortJobs(jobs) {
 
 function renderJobs() {
   const list = document.getElementById('jobsList');
-  document.getElementById('jobCount').textContent = data.jobs.length;
 
   if (!data.jobs.length) {
     list.innerHTML = `
@@ -742,7 +732,6 @@ function cycleAssign(id) {
 
 function renderArchive() {
   const list = document.getElementById('archiveList');
-  document.getElementById('archiveCount').textContent = data.archive.length;
 
   if (!data.archive.length) {
     list.innerHTML = `
