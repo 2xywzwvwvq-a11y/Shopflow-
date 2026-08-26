@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0f172a">
-<title>ShopFlow - Daily Shop Board</title>
+<title>ShopFlow - Mobile Job Board</title>
 <style>
   :root {
     --bg: #0b0f19;
@@ -21,6 +21,7 @@
     --warning: #f97316;
     --success: #22c55e;
     --info: #06b6d4;
+    --waiting: #a855f7;
     --radius: 14px;
     --shadow: 0 4px 20px rgba(0,0,0,0.4);
   }
@@ -73,6 +74,7 @@
   .section-title {
     font-size:12px; text-transform:uppercase; letter-spacing:1px;
     color: var(--text-dim); margin-bottom:12px; font-weight:700;
+    display:flex; justify-content:space-between; align-items:center; gap:8px;
   }
   .card {
     background: var(--surface); border:1px solid var(--border);
@@ -82,22 +84,34 @@
   }
   .card:active { transform: scale(0.98); }
   .card-header {
-    display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;
+    display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; gap:10px;
   }
   .card-title { font-size:16px; font-weight:700; line-height:1.3; }
+  .badge-row { display:flex; flex-wrap:wrap; gap:6px; justify-content:flex-end; }
   .badge {
     padding:4px 10px; border-radius:8px; font-size:11px; font-weight:700; text-transform:uppercase;
+    white-space:nowrap;
   }
   .badge-urgent { background: rgba(239,68,68,0.15); color: var(--urgent); border:1px solid rgba(239,68,68,0.3); }
   .badge-warning { background: rgba(249,115,22,0.15); color: var(--warning); border:1px solid rgba(249,115,22,0.3); }
   .badge-normal { background: rgba(59,130,246,0.15); color: var(--accent-2); border:1px solid rgba(59,130,246,0.3); }
   .badge-done { background: rgba(34,197,94,0.15); color: var(--success); border:1px solid rgba(34,197,94,0.3); }
+  .badge-queued { background: rgba(59,130,246,0.15); color: var(--accent-2); border:1px solid rgba(59,130,246,0.3); }
+  .badge-onsite { background: rgba(34,197,94,0.15); color: var(--success); border:1px solid rgba(34,197,94,0.3); }
+  .badge-waiting { background: rgba(168,85,247,0.15); color: var(--waiting); border:1px solid rgba(168,85,247,0.3); }
   .card-meta {
     display:flex; flex-wrap:wrap; gap:12px; margin-bottom:10px;
     font-size:13px; color: var(--text-dim);
   }
   .meta-item { display:flex; align-items:center; gap:5px; }
-  .meta-item svg { width:14px; height:14px; opacity:0.7; }
+  .meta-item svg { width:14px; height:14px; opacity:0.7; flex-shrink:0; }
+  .meta-item a { color: inherit; text-decoration: none; }
+  .meta-item a:active { color: var(--accent); }
+  .card-notes {
+    margin-top:8px; padding:10px 12px; border-radius:10px;
+    background: var(--surface-2); border:1px solid var(--border);
+    font-size:13px; color: var(--text-dim); line-height:1.4;
+  }
   .card-tools {
     display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;
   }
@@ -119,35 +133,17 @@
   .btn-danger { background: rgba(239,68,68,0.15); color: var(--urgent); border:1px solid rgba(239,68,68,0.3); }
   .btn-success { background: rgba(34,197,94,0.15); color: var(--success); border:1px solid rgba(34,197,94,0.3); }
   .btn:active { transform: scale(0.96); opacity:0.8; }
-  .mechanic-grid {
-    display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:10px;
+  .btn-sm { padding:8px 12px; flex:0 0 auto; font-size:12px; }
+  .filter-row {
+    display:flex; gap:8px; overflow-x:auto; margin-bottom:14px; scrollbar-width:none;
   }
-  .mech-card {
+  .filter-row::-webkit-scrollbar { display:none; }
+  .filter-chip {
+    flex-shrink:0; padding:6px 12px; border-radius:16px;
     background: var(--surface); border:1px solid var(--border);
-    border-radius: var(--radius); padding: 14px; text-align:center;
-    position:relative;
+    font-size:12px; font-weight:600; color: var(--text-dim); cursor:pointer;
   }
-  .mech-avatar {
-    width:50px; height:50px; border-radius:50%;
-    background: linear-gradient(135deg, var(--accent), var(--warning));
-    margin:0 auto 10px; display:flex; align-items:center; justify-content:center;
-    font-size:20px; font-weight:800; color:#000;
-  }
-  .mech-name { font-size:14px; font-weight:700; margin-bottom:4px; }
-  .mech-role { font-size:12px; color: var(--text-dim); margin-bottom:8px; }
-  .mech-status {
-    display:inline-block; padding:3px 10px; border-radius:10px;
-    font-size:11px; font-weight:700;
-  }
-  .status-in { background: rgba(34,197,94,0.15); color: var(--success); }
-  .status-out { background: rgba(148,163,184,0.15); color: var(--text-dim); }
-  .status-busy { background: rgba(239,68,68,0.15); color: var(--urgent); }
-  .mech-toggle {
-    position:absolute; top:8px; right:8px; width:28px; height:28px;
-    border-radius:50%; border:1px solid var(--border); background:var(--surface-2);
-    color:var(--text); display:flex; align-items:center; justify-content:center;
-    cursor:pointer; font-size:16px;
-  }
+  .filter-chip.active { border-color: var(--accent); color: var(--accent); background: rgba(245,158,11,0.1); }
   .tool-cat {
     background: var(--surface); border:1px solid var(--border);
     border-radius: var(--radius); margin-bottom:12px; overflow:hidden;
@@ -214,11 +210,11 @@
   .form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .modal-actions { display:flex; gap:10px; margin-top:20px; }
   .modal-actions .btn { padding:14px; }
-  .swipe-hint {
+  .hint {
     text-align:center; font-size:12px; color: var(--text-dim);
     padding: 8px; opacity:0.6;
   }
-  .archive-card { opacity:0.6; }
+  .archive-card { opacity:0.75; }
   .archive-card .card-title { text-decoration: line-through; }
   .share-btn {
     background: var(--surface-2); border:1px solid var(--border);
@@ -239,52 +235,61 @@
     display:flex; align-items:center; gap:8px;
   }
   .toast.show { transform:translateX(-50%) translateY(0); }
+  .team-line {
+    font-size:12px; color: var(--text-dim); margin-top:2px;
+  }
 </style>
 </head>
 <body>
 
 <div class="header">
   <div class="header-top">
-    <div class="logo">Shop<span>Flow</span></div>
+    <div>
+      <div class="logo">Shop<span>Flow</span></div>
+      <div class="team-line">Antonio &amp; Anthony</div>
+    </div>
     <div style="display:flex;gap:8px;align-items:center;">
       <div class="date-badge" id="currentDate">Loading...</div>
-      <button class="share-btn" onclick="shareBoard()" title="Share Board">
+      <button class="share-btn" onclick="shareBoard()" title="Share Board" aria-label="Share board">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
       </button>
     </div>
   </div>
   <div class="nav-pills" id="navPills">
     <div class="pill active" data-tab="jobs" onclick="switchTab('jobs')">Jobs <span class="count" id="jobCount">0</span></div>
-    <div class="pill" data-tab="mechanics" onclick="switchTab('mechanics')">Crew <span class="count" id="mechCount">0</span></div>
-    <div class="pill" data-tab="tools" onclick="switchTab('tools')">Tools</div>
+    <div class="pill" data-tab="tools" onclick="switchTab('tools')">Truck</div>
     <div class="pill" data-tab="archive" onclick="switchTab('archive')">Done <span class="count" id="archiveCount">0</span></div>
   </div>
 </div>
 
 <div class="section active" id="jobsSection">
   <div class="section-title">Active Jobs</div>
+  <div class="filter-row" id="statusFilters">
+    <button class="filter-chip active" data-filter="all" onclick="setStatusFilter('all')">All</button>
+    <button class="filter-chip" data-filter="queued" onclick="setStatusFilter('queued')">Queued</button>
+    <button class="filter-chip" data-filter="onsite" onclick="setStatusFilter('onsite')">On site</button>
+    <button class="filter-chip" data-filter="waiting" onclick="setStatusFilter('waiting')">Waiting parts</button>
+  </div>
   <div id="jobsList"></div>
-  <div class="swipe-hint">Tap + to add a new job</div>
-</div>
-
-<div class="section" id="mechanicsSection">
-  <div class="section-title">Today's Crew</div>
-  <div class="mechanic-grid" id="mechanicsList"></div>
-  <div class="swipe-hint">Tap the dot to toggle status</div>
+  <div class="hint">Tap + to add a job</div>
 </div>
 
 <div class="section" id="toolsSection">
-  <div class="section-title">Tool Checklists</div>
+  <div class="section-title">
+    <span>Truck Checklist</span>
+    <button class="btn btn-ghost btn-sm" type="button" onclick="resetTruckChecklist()">Reset for today</button>
+  </div>
   <div id="toolsList"></div>
+  <div class="hint">Check gear before you roll. Reset clears checks for a new day.</div>
 </div>
 
 <div class="section" id="archiveSection">
   <div class="section-title">Completed Jobs</div>
   <div id="archiveList"></div>
-  <div class="swipe-hint">Archived jobs stay here for 30 days</div>
+  <div class="hint">History stays on this phone until you delete it.</div>
 </div>
 
-<button class="fab" onclick="openModal()">+</button>
+<button class="fab" onclick="openModal()" aria-label="Add job">+</button>
 
 <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
   <div class="modal">
@@ -305,28 +310,50 @@
         </div>
       </div>
       <div class="form-group">
+        <label class="form-label">Address / Location</label>
+        <input type="text" class="form-input" id="jobAddress" placeholder="123 Main St or customer notes">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Scheduled</label>
+        <input type="datetime-local" class="form-input" id="jobWhen">
+      </div>
+      <div class="form-group">
         <label class="form-label">Job Description</label>
-        <textarea class="form-textarea" id="jobDesc" placeholder="Turbo install, brake job, diag..." required></textarea>
+        <textarea class="form-textarea" id="jobDesc" placeholder="Brake pads, noise diag, oil change..." required></textarea>
       </div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Priority</label>
           <select class="form-select" id="jobPriority">
-            <option value="urgent">🔴 Urgent</option>
-            <option value="warning">🟡 Priority</option>
-            <option value="normal" selected>🔵 Standard</option>
+            <option value="urgent">Urgent</option>
+            <option value="warning">Priority</option>
+            <option value="normal" selected>Standard</option>
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Assigned To</label>
+          <label class="form-label">Who's on it</label>
           <select class="form-select" id="jobAssign">
-            <option value="">Unassigned</option>
+            <option value="">Either</option>
+            <option value="antonio">Antonio</option>
+            <option value="anthony">Anthony</option>
           </select>
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Tools Needed (comma separated)</label>
-        <input type="text" class="form-input" id="jobTools" placeholder="Torque wrench, 10mm socket, scan tool...">
+        <label class="form-label">Status</label>
+        <select class="form-select" id="jobStatus">
+          <option value="queued" selected>Queued</option>
+          <option value="onsite">On site</option>
+          <option value="waiting">Waiting parts</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tools / Parts Needed</label>
+        <input type="text" class="form-input" id="jobTools" placeholder="Torque wrench, pads, scanner...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea class="form-textarea" id="jobNotes" placeholder="Noise only when cold, park in driveway..."></textarea>
       </div>
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button>
@@ -339,49 +366,113 @@
 <div class="toast" id="toast"><span id="toastMsg">Saved!</span></div>
 
 <script>
+const TECHS = [
+  { id: 'antonio', name: 'Antonio' },
+  { id: 'anthony', name: 'Anthony' }
+];
+
+const TRUCK_TOOLS = [
+  {
+    name: 'Daily bag',
+    tools: ['Phone + charger', 'Work order / notepad', 'Gloves', 'Flashlight / headlamp', 'Shop towels', 'Hand cleaner', 'Water / snacks']
+  },
+  {
+    name: 'Core hand tools',
+    tools: ['Socket set (metric)', 'Wrench set', 'Screwdrivers / Torx / hex', 'Pliers / cutters', 'Hammer / mallet', 'Pry bars', 'Torque wrench', 'Breaker bar / impact']
+  },
+  {
+    name: 'Undercar / fluids',
+    tools: ['Floor jack + stands / ramps', 'Oil drain pan', 'Funnel set', 'Oil filter wrench', 'Brake cleaner', 'Penetrant', 'Catch bottles']
+  },
+  {
+    name: 'Diag / electrical',
+    tools: ['OBD2 scanner', 'Multimeter', 'Test light', 'Jump pack / cables', 'Battery tester', 'Wire kit / heat shrink']
+  }
+];
+
+const STATUS_LABELS = {
+  queued: 'Queued',
+  onsite: 'On site',
+  waiting: 'Waiting parts'
+};
+
+const PRIORITY_LABELS = {
+  urgent: 'Urgent',
+  warning: 'Priority',
+  normal: 'Standard'
+};
+
 let data = {
+  version: 2,
   jobs: [],
-  mechanics: [
-    { id: 'm1', name: 'Garrett', role: 'Lead Tech', status: 'in', initials: 'G' },
-    { id: 'm2', name: 'Alex', role: 'Diagnostic', status: 'in', initials: 'A' },
-    { id: 'm3', name: 'Jose', role: 'General', status: 'busy', initials: 'J' },
-    { id: 'm4', name: 'Derek', role: 'Apprentice', status: 'out', initials: 'D' }
-  ],
-  toolCategories: [
-    {
-      name: 'Engine / Turbo',
-      tools: ['Torque wrench (ft-lb)', 'Torque wrench (in-lb)', '3/8" drive sockets', '1/2" drive sockets', 'Torx bits (T25-T55)', 'Hex keys (metric)', 'Pry bar set', 'Breaker bar', 'Magnetic pickup tool']
-    },
-    {
-      name: 'Brake & Suspension',
-      tools: ['C-clamp / caliper tool', 'Brake bleeder kit', 'Impact driver', 'Ball joint press', 'Spring compressor', 'Strut spreader', 'Caliper hanger']
-    },
-    {
-      name: 'Electrical / Diag',
-      tools: ['OBD2 scanner', 'Multimeter', 'Test light', 'Wire strippers', 'Butt connectors / heat shrink', 'Dielectric grease', 'Battery tester']
-    },
-    {
-      name: 'General Shop',
-      tools: ['Jack + stands (rated)', 'Oil drain pan', 'Funnel set', 'Shop towels', 'Brake clean', 'PB Blaster / penetrant', 'Shop vac']
-    }
-  ],
+  toolCategories: TRUCK_TOOLS,
   toolState: {},
   archive: []
 };
 
 let editingId = null;
+let statusFilter = 'all';
 
 function init() {
   const saved = localStorage.getItem('shopflow_data');
   if (saved) {
     try {
-      const parsed = JSON.parse(saved);
-      data = { ...data, ...parsed };
-    } catch(e) {}
+      migrate(JSON.parse(saved));
+    } catch (e) {}
   }
   updateDate();
   renderAll();
   setInterval(updateDate, 60000);
+}
+
+function migrate(parsed) {
+  const jobs = Array.isArray(parsed.jobs) ? parsed.jobs : [];
+  const archive = Array.isArray(parsed.archive) ? parsed.archive : [];
+
+  // Deduplicate archive restore bug: drop archived copies still sitting in jobs
+  const activeJobs = jobs
+    .filter(j => !j.archived)
+    .map(normalizeJob);
+
+  const archiveJobs = archive.map(normalizeJob);
+
+  const useTruckTools = !parsed.version || parsed.version < 2 || !Array.isArray(parsed.toolCategories);
+  data = {
+    version: 2,
+    jobs: activeJobs,
+    archive: archiveJobs,
+    toolCategories: useTruckTools ? TRUCK_TOOLS : parsed.toolCategories,
+    toolState: useTruckTools ? {} : (parsed.toolState || {})
+  };
+  saveData();
+}
+
+function normalizeJob(job) {
+  const status = ['queued', 'onsite', 'waiting'].includes(job.status) ? job.status : 'queued';
+  let assignedTo = job.assignedTo || '';
+  if (assignedTo && !TECHS.some(t => t.id === assignedTo)) {
+    // Map old fake crew ids loosely, otherwise clear
+    const old = String(assignedTo);
+    if (old === 'm1') assignedTo = 'antonio';
+    else if (old === 'm2') assignedTo = 'anthony';
+    else assignedTo = '';
+  }
+  return {
+    id: job.id || ('j' + Date.now() + Math.random().toString(16).slice(2)),
+    customer: job.customer || '',
+    phone: job.phone || '',
+    vehicle: job.vehicle || '',
+    address: job.address || '',
+    when: job.when || '',
+    desc: job.desc || '',
+    priority: ['urgent', 'warning', 'normal'].includes(job.priority) ? job.priority : 'normal',
+    assignedTo,
+    status,
+    tools: job.tools || '',
+    notes: job.notes || '',
+    createdAt: job.createdAt || Date.now(),
+    completedAt: job.completedAt || null
+  };
 }
 
 function saveData() {
@@ -399,12 +490,42 @@ function switchTab(tab) {
   document.querySelectorAll('.section').forEach(s => s.classList.toggle('active', s.id === tab + 'Section'));
 }
 
+function setStatusFilter(filter) {
+  statusFilter = filter;
+  document.querySelectorAll('#statusFilters .filter-chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.filter === filter);
+  });
+  renderJobs();
+}
+
+function techName(id) {
+  return TECHS.find(t => t.id === id)?.name || '';
+}
+
+function formatWhen(when) {
+  if (!when) return '';
+  const d = new Date(when);
+  if (Number.isNaN(d.getTime())) return when;
+  return d.toLocaleString('en-US', {
+    weekday: 'short', month: 'short', day: 'numeric',
+    hour: 'numeric', minute: '2-digit'
+  });
+}
+
+function mapsUrl(address) {
+  return 'https://maps.apple.com/?q=' + encodeURIComponent(address);
+}
+
 function renderJobs() {
   const list = document.getElementById('jobsList');
-  const active = data.jobs.filter(j => !j.archived);
+  let active = data.jobs.slice();
   document.getElementById('jobCount').textContent = active.length;
-  
-  if (!active.length) {
+
+  if (statusFilter !== 'all') {
+    active = active.filter(j => j.status === statusFilter);
+  }
+
+  if (!data.jobs.length) {
     list.innerHTML = `
       <div class="empty-state">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
@@ -412,42 +533,79 @@ function renderJobs() {
       </div>`;
     return;
   }
-  
+
+  if (!active.length) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <p>No jobs in this status.</p>
+      </div>`;
+    return;
+  }
+
   const priorityOrder = { urgent: 0, warning: 1, normal: 2 };
-  active.sort((a,b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
-  
+  active.sort((a, b) => {
+    const pa = priorityOrder[a.priority] - priorityOrder[b.priority];
+    if (pa !== 0) return pa;
+    const wa = a.when ? new Date(a.when).getTime() : Infinity;
+    const wb = b.when ? new Date(b.when).getTime() : Infinity;
+    return wa - wb;
+  });
+
   list.innerHTML = active.map(job => {
-    const mech = data.mechanics.find(m => m.id === job.assignedTo);
+    const who = techName(job.assignedTo);
     const tools = job.tools ? job.tools.split(',').map(t => t.trim()).filter(Boolean) : [];
     return `
       <div class="card" data-id="${job.id}">
         <div class="card-header">
           <div class="card-title">${esc(job.desc)}</div>
-          <div class="badge badge-${job.priority}">${job.priority}</div>
+          <div class="badge-row">
+            <div class="badge badge-${job.status}">${STATUS_LABELS[job.status] || job.status}</div>
+            <div class="badge badge-${job.priority}">${PRIORITY_LABELS[job.priority] || job.priority}</div>
+          </div>
         </div>
         <div class="card-meta">
           <div class="meta-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             ${esc(job.customer)}
           </div>
-          ${job.phone ? `<div class="meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg><a href="tel:${job.phone}" style="color:inherit;text-decoration:none;">${esc(job.phone)}</a></div>` : ''}
+          ${job.phone ? `<div class="meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg><a href="tel:${esc(job.phone)}">${esc(job.phone)}</a></div>` : ''}
           ${job.vehicle ? `<div class="meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg>${esc(job.vehicle)}</div>` : ''}
-          ${mech ? `<div class="meta-item" style="color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${esc(mech.name)}</div>` : ''}
+          ${job.address ? `<div class="meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><a href="${mapsUrl(job.address)}" target="_blank" rel="noopener">${esc(job.address)}</a></div>` : ''}
+          ${job.when ? `<div class="meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${esc(formatWhen(job.when))}</div>` : ''}
+          ${who ? `<div class="meta-item" style="color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>${esc(who)}</div>` : ''}
         </div>
+        ${job.notes ? `<div class="card-notes">${esc(job.notes)}</div>` : ''}
         ${tools.length ? `<div class="card-tools">${tools.map(t => `<span class="tool-tag">${esc(t)}</span>`).join('')}</div>` : ''}
         <div class="card-actions">
-          <button class="btn btn-ghost" onclick="editJob('${job.id}')">Edit</button>
-          <button class="btn btn-success" onclick="archiveJob('${job.id}')">Complete</button>
+          <button class="btn btn-ghost" type="button" onclick="cycleJobStatus('${job.id}')">${nextStatusLabel(job.status)}</button>
+          <button class="btn btn-ghost" type="button" onclick="editJob('${job.id}')">Edit</button>
+          <button class="btn btn-success" type="button" onclick="archiveJob('${job.id}')">Complete</button>
         </div>
       </div>
     `;
   }).join('');
 }
 
+function nextStatusLabel(status) {
+  if (status === 'queued') return '→ On site';
+  if (status === 'onsite') return '→ Waiting';
+  return '→ Queued';
+}
+
+function cycleJobStatus(id) {
+  const job = data.jobs.find(j => j.id === id);
+  if (!job) return;
+  const cycle = { queued: 'onsite', onsite: 'waiting', waiting: 'queued' };
+  job.status = cycle[job.status] || 'queued';
+  saveData();
+  renderJobs();
+  showToast(`${job.customer}: ${STATUS_LABELS[job.status]}`);
+}
+
 function renderArchive() {
   const list = document.getElementById('archiveList');
   document.getElementById('archiveCount').textContent = data.archive.length;
-  
+
   if (!data.archive.length) {
     list.innerHTML = `
       <div class="empty-state">
@@ -456,9 +614,9 @@ function renderArchive() {
       </div>`;
     return;
   }
-  
+
   list.innerHTML = data.archive.slice().reverse().map(job => {
-    const mech = data.mechanics.find(m => m.id === job.assignedTo);
+    const who = techName(job.assignedTo);
     const doneDate = job.completedAt ? new Date(job.completedAt).toLocaleDateString() : 'Recently';
     return `
       <div class="card archive-card" data-id="${job.id}">
@@ -468,49 +626,17 @@ function renderArchive() {
         </div>
         <div class="card-meta">
           <div class="meta-item">${esc(job.customer)} • ${esc(job.vehicle || 'No vehicle')}</div>
+          ${job.address ? `<div class="meta-item">${esc(job.address)}</div>` : ''}
+          ${who ? `<div class="meta-item">${esc(who)}</div>` : ''}
           <div class="meta-item">Completed: ${doneDate}</div>
         </div>
         <div class="card-actions">
-          <button class="btn btn-ghost" onclick="restoreJob('${job.id}')">Restore</button>
-          <button class="btn btn-danger" onclick="deleteJob('${job.id}', true)">Delete</button>
+          <button class="btn btn-ghost" type="button" onclick="restoreJob('${job.id}')">Restore</button>
+          <button class="btn btn-danger" type="button" onclick="deleteJob('${job.id}', true)">Delete</button>
         </div>
       </div>
     `;
   }).join('');
-}
-
-function renderMechanics() {
-  const list = document.getElementById('mechanicsList');
-  document.getElementById('mechCount').textContent = data.mechanics.filter(m => m.status !== 'out').length;
-  
-  list.innerHTML = data.mechanics.map(m => {
-    const statusClass = m.status === 'in' ? 'status-in' : m.status === 'busy' ? 'status-busy' : 'status-out';
-    const statusLabel = m.status === 'in' ? 'Available' : m.status === 'busy' ? 'On Job' : 'Off';
-    return `
-      <div class="mech-card">
-        <button class="mech-toggle" onclick="cycleMechStatus('${m.id}')" title="Toggle status">●</button>
-        <div class="mech-avatar">${esc(m.initials)}</div>
-        <div class="mech-name">${esc(m.name)}</div>
-        <div class="mech-role">${esc(m.role)}</div>
-        <div class="mech-status ${statusClass}">${statusLabel}</div>
-      </div>
-    `;
-  }).join('');
-  
-  const assignSelect = document.getElementById('jobAssign');
-  const currentVal = assignSelect.value;
-  assignSelect.innerHTML = '<option value="">Unassigned</option>' + 
-    data.mechanics.map(m => `<option value="${m.id}">${esc(m.name)}</option>`).join('');
-  assignSelect.value = currentVal;
-}
-
-function cycleMechStatus(id) {
-  const mech = data.mechanics.find(m => m.id === id);
-  const cycle = { 'in': 'busy', 'busy': 'out', 'out': 'in' };
-  mech.status = cycle[mech.status];
-  saveData();
-  renderAll();
-  showToast(`${mech.name} is now ${mech.status === 'in' ? 'available' : mech.status === 'busy' ? 'on a job' : 'off'}`);
 }
 
 function renderTools() {
@@ -528,7 +654,7 @@ function renderTools() {
             const key = `${ci}-${ti}`;
             const checked = data.toolState[key] ? 'checked' : '';
             return `
-              <div class="tool-check ${checked}" onclick="toggleTool('${key}', this)">
+              <div class="tool-check ${checked}" onclick="toggleTool('${key}')">
                 <div class="check-box ${checked}"></div>
                 <span>${esc(tool)}</span>
               </div>
@@ -544,30 +670,43 @@ function toggleToolCat(ci) {
   document.getElementById(`toolCat-${ci}`).classList.toggle('collapsed');
 }
 
-function toggleTool(key, el) {
+function toggleTool(key) {
   data.toolState[key] = !data.toolState[key];
-  el.classList.toggle('checked');
-  el.querySelector('.check-box').classList.toggle('checked');
   saveData();
   renderTools();
+}
+
+function resetTruckChecklist() {
+  if (!confirm('Reset truck checklist for a new day?')) return;
+  data.toolState = {};
+  saveData();
+  renderTools();
+  showToast('Checklist reset');
 }
 
 function openModal(editId = null) {
   editingId = editId;
   document.getElementById('modalTitle').textContent = editId ? 'Edit Job' : 'New Job';
   document.getElementById('modalOverlay').classList.add('active');
-  
+
   if (editId) {
     const job = data.jobs.find(j => j.id === editId);
+    if (!job) return;
     document.getElementById('custName').value = job.customer;
     document.getElementById('custPhone').value = job.phone || '';
     document.getElementById('custVehicle').value = job.vehicle || '';
+    document.getElementById('jobAddress').value = job.address || '';
+    document.getElementById('jobWhen').value = job.when || '';
     document.getElementById('jobDesc').value = job.desc;
     document.getElementById('jobPriority').value = job.priority;
     document.getElementById('jobAssign').value = job.assignedTo || '';
+    document.getElementById('jobStatus').value = job.status || 'queued';
     document.getElementById('jobTools').value = job.tools || '';
+    document.getElementById('jobNotes').value = job.notes || '';
   } else {
     document.getElementById('jobForm').reset();
+    document.getElementById('jobPriority').value = 'normal';
+    document.getElementById('jobStatus').value = 'queued';
   }
 }
 
@@ -578,26 +717,30 @@ function closeModal() {
 
 function saveJob(e) {
   e.preventDefault();
-  const job = {
-    id: editingId || 'j' + Date.now(),
+  const existing = editingId ? data.jobs.find(j => j.id === editingId) : null;
+  const job = normalizeJob({
+    id: editingId || ('j' + Date.now()),
     customer: document.getElementById('custName').value.trim(),
     phone: document.getElementById('custPhone').value.trim(),
     vehicle: document.getElementById('custVehicle').value.trim(),
+    address: document.getElementById('jobAddress').value.trim(),
+    when: document.getElementById('jobWhen').value,
     desc: document.getElementById('jobDesc').value.trim(),
     priority: document.getElementById('jobPriority').value,
     assignedTo: document.getElementById('jobAssign').value,
+    status: document.getElementById('jobStatus').value,
     tools: document.getElementById('jobTools').value.trim(),
-    createdAt: editingId ? (data.jobs.find(j => j.id === editingId)?.createdAt || Date.now()) : Date.now(),
-    archived: false
-  };
-  
+    notes: document.getElementById('jobNotes').value.trim(),
+    createdAt: existing?.createdAt || Date.now()
+  });
+
   if (editingId) {
     const idx = data.jobs.findIndex(j => j.id === editingId);
-    data.jobs[idx] = job;
+    if (idx >= 0) data.jobs[idx] = job;
   } else {
     data.jobs.push(job);
   }
-  
+
   saveData();
   closeModal();
   renderAll();
@@ -609,20 +752,23 @@ function editJob(id) {
 }
 
 function archiveJob(id) {
-  const job = data.jobs.find(j => j.id === id);
-  job.archived = true;
+  const idx = data.jobs.findIndex(j => j.id === id);
+  if (idx < 0) return;
+  const job = data.jobs[idx];
   job.completedAt = Date.now();
   data.archive.push(job);
+  data.jobs.splice(idx, 1);
   saveData();
   renderAll();
-  showToast('Job archived');
+  showToast('Job completed');
 }
 
 function restoreJob(id) {
   const idx = data.archive.findIndex(j => j.id === id);
+  if (idx < 0) return;
   const job = data.archive[idx];
-  job.archived = false;
   delete job.completedAt;
+  job.status = job.status || 'queued';
   data.jobs.push(job);
   data.archive.splice(idx, 1);
   saveData();
@@ -644,7 +790,6 @@ function deleteJob(id, fromArchive = false) {
 
 function renderAll() {
   renderJobs();
-  renderMechanics();
   renderTools();
   renderArchive();
 }
@@ -663,28 +808,48 @@ function showToast(msg) {
 }
 
 async function shareBoard() {
+  const active = data.jobs;
   const summary = [
-    `📋 ShopFlow - ${new Date().toLocaleDateString()}`,
+    `ShopFlow — ${new Date().toLocaleDateString()}`,
+    `Antonio & Anthony`,
     ``,
-    `👥 Crew In: ${data.mechanics.filter(m => m.status !== 'out').map(m => m.name).join(', ') || 'None'}`,
-    `🔧 Active Jobs: ${data.jobs.filter(j => !j.archived).length}`,
-    `✅ Completed Today: ${data.archive.filter(j => j.completedAt && new Date(j.completedAt).toDateString() === new Date().toDateString()).length}`,
+    `Active jobs: ${active.length}`,
+    `Completed: ${data.archive.length}`,
     ``,
     `--- URGENT ---`,
-    ...data.jobs.filter(j => !j.archived && j.priority === 'urgent').map(j => `🔴 ${j.customer} - ${j.desc} (${j.vehicle || 'No vehicle'})`),
+    ...active.filter(j => j.priority === 'urgent').map(formatShareJob),
     ``,
-    `--- PRIORITY ---`,
-    ...data.jobs.filter(j => !j.archived && j.priority === 'warning').map(j => `🟡 ${j.customer} - ${j.desc}`),
+    `--- ON SITE ---`,
+    ...active.filter(j => j.status === 'onsite').map(formatShareJob),
+    ``,
+    `--- WAITING PARTS ---`,
+    ...active.filter(j => j.status === 'waiting').map(formatShareJob),
+    ``,
+    `--- QUEUED ---`,
+    ...active.filter(j => j.status === 'queued').map(formatShareJob)
   ].join('\n');
-  
+
   if (navigator.share) {
     try {
-      await navigator.share({ title: 'ShopFlow Daily Board', text: summary });
-    } catch(e) {}
+      await navigator.share({ title: 'ShopFlow Board', text: summary });
+    } catch (e) {}
   } else {
     await navigator.clipboard.writeText(summary);
-    showToast('Summary copied to clipboard');
+    showToast('Summary copied');
   }
+}
+
+function formatShareJob(j) {
+  const who = techName(j.assignedTo);
+  const bits = [
+    j.customer,
+    j.desc,
+    j.vehicle,
+    j.address,
+    j.when ? formatWhen(j.when) : '',
+    who
+  ].filter(Boolean);
+  return `• ${bits.join(' — ')}`;
 }
 
 init();
