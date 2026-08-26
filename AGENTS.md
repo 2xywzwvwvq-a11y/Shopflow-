@@ -2,13 +2,15 @@
 
 ## Cursor Cloud specific instructions
 
-**Product focus:** Prefer **ShopFlow** unless the user asks about TradePro. ShopFlow is for a **2-person mobile mechanic** team (owner + partner) — job memory / daily board, not a multi-tech shop floor. The Crew tab’s fake multi-tech roster is out of scope for that use case.
+**Product focus:** Prefer **ShopFlow** unless the user asks about TradePro. ShopFlow is a **2-person mobile mechanic** job board for **Antonio & Anthony** (not a multi-tech shop floor). Tabs: Jobs / Truck / Done. No Crew tab.
+
+**Live hosting:** GitHub Pages from `main` → `https://2xywzwvwvq-a11y.github.io/Shopflow-/shopflow.html` (root `/` redirects via `index.html`). Phone home-screen icons keep working after updates as long as this URL stays the same.
 
 This repo is two independent **client-only** HTML apps (no package manager, backend, database, lint, tests, or build step):
 
 | App | Path | URL when serving repo root |
 |-----|------|----------------------------|
-| ShopFlow | `shopflow.html` | `http://127.0.0.1:8080/shopflow.html` |
+| ShopFlow | `shopflow.html` (+ `index.html` redirect) | `http://127.0.0.1:8080/shopflow.html` |
 | TradePro | `TradePro` (no `.html` extension) | Prefer `http://127.0.0.1:8080/TradePro.html` after linking (see below) |
 
 ### Run locally
@@ -35,5 +37,5 @@ None exist in this repository. Manual browser checks are the verification path.
 
 ### Hello-world checks
 
-- **ShopFlow:** create a job via `+`, confirm it on Jobs, Complete → Done.
+- **ShopFlow:** create a job with address/when/who (Antonio or Anthony)/status; cycle status; Complete → Done; Restore without duplicating; Truck checklist Reset.
 - **TradePro:** BUY market order (click a quote row to set symbol, set qty, Place Buy Order); confirm position + funds change.
