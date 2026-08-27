@@ -12,6 +12,12 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="shopflow-icon.png">
 <link rel="icon" href="shopflow-icon.png" type="image/png">
+<script>
+try {
+  var _sfTheme = JSON.parse(localStorage.getItem('shopflow_data') || '{}').theme;
+  if (_sfTheme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+} catch (e) {}
+</script>
 <style>
   :root {
     --bg: #0b0f19;
@@ -28,10 +34,28 @@
     --waiting: #a855f7;
     --radius: 16px;
     --shadow: 0 8px 24px rgba(0,0,0,0.35);
+    --header-bg: rgba(11, 15, 25, 0.88);
+    --tabbar-bg: rgba(15, 20, 32, 0.94);
+    --overlay: rgba(0, 0, 0, 0.7);
     --tabbar-h: 64px;
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
+    color-scheme: dark;
   }
+  [data-theme="light"] {
+    --bg: #f3f5fa;
+    --surface: #ffffff;
+    --surface-2: #e8edf6;
+    --border: #cfd6e6;
+    --text: #0f172a;
+    --text-dim: #5b6578;
+    --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    --header-bg: rgba(243, 245, 250, 0.92);
+    --tabbar-bg: rgba(255, 255, 255, 0.94);
+    --overlay: rgba(15, 23, 42, 0.4);
+    color-scheme: light;
+  }
+  [data-theme="light"] .btn-wait { color: #6b21a8; }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html { background: var(--bg); }
   body {
@@ -44,7 +68,7 @@
     overflow-x: hidden;
   }
   .header {
-    background: rgba(11, 15, 25, 0.88);
+    background: var(--header-bg);
     padding: calc(10px + var(--safe-top)) 16px 10px;
     position: sticky; top:0; z-index:100;
     backdrop-filter: blur(20px);
@@ -174,15 +198,11 @@
   .btn:active { transform: scale(0.98); opacity:0.9; }
   .btn-sm { min-height:44px; padding:10px 12px; flex:0 0 auto; font-size:13px; }
 
-  .truck-hero {
-    background: var(--surface); border:1px solid var(--border);
-    border-radius: var(--radius); padding: 16px; margin-bottom: 14px;
+  .tools-reset-row {
+    display:flex; justify-content:flex-end; margin-bottom:10px;
   }
-  .truck-hero-top { display:flex; justify-content:space-between; align-items:center; gap:10px; }
-  .truck-hero-label { font-size:18px; font-weight:800; }
-  .truck-hero-label.ready { color: var(--success); }
-  .truck-bar { height:10px; border-radius:999px; background: var(--surface-2); margin-top:12px; overflow:hidden; }
-  .truck-bar > div { height:100%; background: var(--accent); border-radius:999px; }
+  .tools-reset-row .btn { flex:0 0 auto; min-width:88px; }
+
   .tool-cat {
     background: var(--surface); border:1px solid var(--border);
     border-radius: var(--radius); margin-bottom:12px; overflow:hidden;
@@ -220,7 +240,6 @@
     width:60px; height:60px; border-radius:50%;
     background: var(--accent); color:#000; border:none;
     font-size:32px; font-weight:300; cursor:pointer;
-    box-shadow: 0 6px 24px rgba(245,158,11,0.4);
     display:flex; align-items:center; justify-content:center;
   }
   .fab[hidden] { display:none !important; }
@@ -231,7 +250,7 @@
     display:grid; grid-template-columns: 1fr 1fr 1fr;
     padding: 6px 8px var(--safe-bottom);
     min-height: calc(var(--tabbar-h) + var(--safe-bottom));
-    background: rgba(15, 20, 32, 0.94);
+    background: var(--tabbar-bg);
     backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     border-top: 1px solid var(--border);
   }
@@ -244,7 +263,7 @@
   .tabbar-btn.active { color: var(--accent); background: rgba(245,158,11,0.1); }
 
   .modal-overlay {
-    position:fixed; inset:0; background: rgba(0,0,0,0.7);
+    position:fixed; inset:0; background: var(--overlay);
     backdrop-filter: blur(8px); z-index:300;
     display:none; align-items:flex-end; justify-content:center;
   }
@@ -310,6 +329,28 @@
     margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.04em;
   }
   .archive-day:first-child { margin-top: 0; }
+
+  .settings-row {
+    display:flex; justify-content:space-between; align-items:center; gap:12px;
+    min-height:56px; padding: 14px 16px;
+    background: var(--surface-2); border:1px solid var(--border);
+    border-radius: 12px;
+  }
+  .settings-label { font-size:16px; font-weight:800; }
+  .toggle {
+    appearance: none; -webkit-appearance: none;
+    width: 52px; height: 32px; border-radius: 999px;
+    background: var(--border); border: none; cursor: pointer;
+    position: relative; flex-shrink: 0;
+  }
+  .toggle::after {
+    content: ''; position: absolute; top: 3px; left: 3px;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    transition: transform 0.15s ease;
+  }
+  .toggle:checked { background: var(--accent); }
+  .toggle:checked::after { transform: translateX(20px); }
   .archive-card { padding: 14px 16px; border-left-color: var(--border); }
   .archive-meta { margin-top:6px; font-size:13px; color: var(--text-dim); font-weight:600; }
   .archive-actions { display:flex; gap:8px; margin-top:12px; }
@@ -324,6 +365,7 @@
       <div class="date-badge" id="currentDate">Loading...</div>
       <button class="icon-btn" type="button" onclick="toggleHeaderMenu(event)" title="More" aria-label="More">⋯</button>
       <div class="header-menu" id="headerMenu">
+        <button type="button" onclick="openSettings()">Settings</button>
         <button type="button" onclick="shareBoard()">Share today's board</button>
       </div>
     </div>
@@ -336,7 +378,7 @@
 
 <div class="section" id="toolsSection">
   <div id="toolsList"></div>
-  <div class="hint">Check gear before you roll. Reset clears checks for a new day.</div>
+  <div class="hint">Open a job type so you don't forget the gear. Reset clears checks.</div>
 </div>
 
 <div class="section" id="archiveSection">
@@ -416,6 +458,19 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="settingsOverlay" onclick="if(event.target===this)closeSettings()">
+  <div class="modal">
+    <div class="modal-title">Settings</div>
+    <div class="settings-row">
+      <span class="settings-label">Light mode</span>
+      <input class="toggle" type="checkbox" id="lightModeToggle" onchange="setLightMode(this.checked)" aria-label="Light mode">
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-primary" onclick="closeSettings()">Done</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"><span id="toastMsg">Saved!</span></div>
 
 <script>
@@ -426,20 +481,32 @@ const TECHS = [
 
 const TRUCK_TOOLS = [
   {
-    name: 'Daily bag',
-    tools: ['Phone + charger', 'Work order / notepad', 'Gloves', 'Flashlight / headlamp', 'Shop towels', 'Hand cleaner', 'Water / snacks']
+    name: 'Daily items',
+    tools: ['Phone + portable charger', 'Gloves', 'Flashlight', 'Pocket screwdriver', 'Shop towels', 'Hand cleaner', 'Water / snacks', 'Extra shirt']
   },
   {
-    name: 'Core hand tools',
-    tools: ['Socket set (metric)', 'Wrench set', 'Screwdrivers / Torx / hex', 'Pliers / cutters', 'Hammer / mallet', 'Pry bars', 'Torque wrench', 'Breaker bar / impact']
+    name: 'Oil change',
+    tools: ['Floor jack + stands', '3/8 socket set', 'Oil drain pan', 'Funnel', 'Oil filter wrench', 'Oil', 'Filter', 'Shop towels']
   },
   {
-    name: 'Undercar / fluids',
-    tools: ['Floor jack + stands / ramps', 'Oil drain pan', 'Funnel set', 'Oil filter wrench', 'Brake cleaner', 'Penetrant', 'Catch bottles']
+    name: 'Brakes',
+    tools: ['Floor jack + stands', '3/8 socket set', 'Caliper tool', 'Hammer', 'Brake cleaner']
   },
   {
-    name: 'Diag / electrical',
-    tools: ['OBD2 scanner', 'Multimeter', 'Test light', 'Jump pack / cables', 'Battery tester', 'Wire kit / heat shrink']
+    name: 'Alternator',
+    tools: ['Socket set', 'Wrench set', 'Belt tool', 'Alternator']
+  },
+  {
+    name: 'Battery / jump',
+    tools: ['Jump pack', 'Socket set', 'Terminal brush']
+  },
+  {
+    name: 'AC',
+    tools: ['Gauges', 'Vacuum pump', 'Refrigerant']
+  },
+  {
+    name: 'Diag',
+    tools: ['OBD2 scanner', 'Multimeter', 'Test light', 'Jump pack / cables', 'Wire kit / heat shrink']
   }
 ];
 
@@ -450,16 +517,18 @@ const STATUS_LABELS = {
 };
 
 let data = {
-  version: 2,
+  version: 10,
   jobs: [],
   toolCategories: TRUCK_TOOLS,
   toolState: {},
-  archive: []
+  archive: [],
+  theme: 'dark'
 };
 
 let editingId = null;
 let formWho = '';
 let expandedIds = new Set();
+let expandedToolCats = new Set();
 let currentTab = 'jobs';
 
 function init() {
@@ -469,6 +538,7 @@ function init() {
       migrate(JSON.parse(saved));
     } catch (e) {}
   }
+  applyTheme(data.theme);
   updateDate();
   renderAll();
   setInterval(updateDate, 60000);
@@ -487,13 +557,14 @@ function migrate(parsed) {
 
   const archiveJobs = archive.map(normalizeJob);
 
-  const useTruckTools = !parsed.version || parsed.version < 2 || !Array.isArray(parsed.toolCategories);
+  const useTruckTools = !parsed.version || parsed.version < 10 || !Array.isArray(parsed.toolCategories);
   data = {
-    version: 2,
+    version: 10,
     jobs: activeJobs,
     archive: archiveJobs,
     toolCategories: useTruckTools ? TRUCK_TOOLS : parsed.toolCategories,
-    toolState: useTruckTools ? {} : (parsed.toolState || {})
+    toolState: useTruckTools ? {} : (parsed.toolState || {}),
+    theme: parsed.theme === 'light' ? 'light' : 'dark'
   };
   saveData();
 }
@@ -550,6 +621,33 @@ function toggleHeaderMenu(e) {
 
 function closeHeaderMenu() {
   document.getElementById('headerMenu')?.classList.remove('open');
+}
+
+function applyTheme(theme) {
+  const light = theme === 'light';
+  document.documentElement.setAttribute('data-theme', light ? 'light' : 'dark');
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', light ? '#f3f5fa' : '#0b0f19');
+  const bar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+  if (bar) bar.setAttribute('content', light ? 'default' : 'black-translucent');
+  const toggle = document.getElementById('lightModeToggle');
+  if (toggle) toggle.checked = light;
+}
+
+function setLightMode(on) {
+  data.theme = on ? 'light' : 'dark';
+  applyTheme(data.theme);
+  saveData();
+}
+
+function openSettings() {
+  closeHeaderMenu();
+  applyTheme(data.theme);
+  document.getElementById('settingsOverlay').classList.add('active');
+}
+
+function closeSettings() {
+  document.getElementById('settingsOverlay').classList.remove('active');
 }
 
 function techName(id) {
@@ -784,29 +882,13 @@ function onArchiveClick(e) {
 function renderTools() {
   const list = document.getElementById('toolsList');
   const cats = data.toolCategories;
-  let total = 0;
-  let checked = 0;
-  cats.forEach((cat, ci) => {
-    cat.tools.forEach((_, ti) => {
-      total += 1;
-      if (data.toolState[`${ci}-${ti}`]) checked += 1;
-    });
-  });
-  const ready = total > 0 && checked === total;
-  const pct = total ? Math.round((checked / total) * 100) : 0;
 
-  const hero = `
-    <div class="truck-hero">
-      <div class="truck-hero-top">
-        <div class="truck-hero-label${ready ? ' ready' : ''}">${ready ? 'Ready to roll' : checked + ' / ' + total + ' packed'}</div>
-        <button class="btn btn-ghost btn-sm" type="button" onclick="resetTruckChecklist()">Reset</button>
-      </div>
-      <div class="truck-bar"><div style="width:${pct}%"></div></div>
-    </div>`;
-
-  list.innerHTML = hero + cats.map((cat, ci) => {
+  list.innerHTML = `
+    <div class="tools-reset-row">
+      <button class="btn btn-ghost btn-sm" type="button" onclick="resetTruckChecklist()">Reset</button>
+    </div>` + cats.map((cat, ci) => {
     const checkedCount = cat.tools.filter((_, ti) => data.toolState[`${ci}-${ti}`]).length;
-    const isCollapsed = checkedCount === cat.tools.length && checkedCount > 0;
+    const isCollapsed = !expandedToolCats.has(ci);
     return `
       <div class="tool-cat ${isCollapsed ? 'collapsed' : ''}" id="toolCat-${ci}">
         <div class="tool-cat-header" onclick="toggleToolCat(${ci})">
@@ -828,7 +910,9 @@ function renderTools() {
 }
 
 function toggleToolCat(ci) {
-  document.getElementById('toolCat-' + ci).classList.toggle('collapsed');
+  if (expandedToolCats.has(ci)) expandedToolCats.delete(ci);
+  else expandedToolCats.add(ci);
+  document.getElementById('toolCat-' + ci).classList.toggle('collapsed', !expandedToolCats.has(ci));
 }
 
 function toggleTool(key) {
@@ -840,6 +924,7 @@ function toggleTool(key) {
 function resetTruckChecklist() {
   if (!confirm('Reset tools checklist for a new day?')) return;
   data.toolState = {};
+  expandedToolCats = new Set();
   saveData();
   renderTools();
   showToast('Checklist reset');
