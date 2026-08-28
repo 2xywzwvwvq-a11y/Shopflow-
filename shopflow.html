@@ -234,16 +234,17 @@ try {
   .tool-check.checked span { text-decoration: line-through; opacity:0.5; }
   .tool-check span { font-size:15px; font-weight:600; }
 
-  .fab {
-    position:fixed; right:20px; z-index:200;
-    bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 12px);
-    width:60px; height:60px; border-radius:50%;
-    background: var(--accent); color:#000; border:none;
-    font-size:32px; font-weight:300; cursor:pointer;
-    display:flex; align-items:center; justify-content:center;
+  /* Docked above the tabbar instead of floating over the list, so it can
+     never cover a job's own action buttons. */
+  .add-bar {
+    position:fixed; left:0; right:0; z-index:200;
+    bottom: calc(var(--tabbar-h) + var(--safe-bottom));
+    display:flex; padding: 8px 16px;
+    background: var(--tabbar-bg);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
   }
-  .fab[hidden] { display:none !important; }
-  .fab:active { transform: scale(0.92); }
+  .add-bar[hidden] { display:none !important; }
 
   .tabbar {
     position:fixed; left:0; right:0; bottom:0; z-index:180;
@@ -322,6 +323,7 @@ try {
     background: var(--surface-2); border:1px solid var(--border);
     padding:12px 24px; border-radius:12px; font-weight:700; z-index:400;
     box-shadow: var(--shadow); transition: transform 0.3s ease;
+    pointer-events: none;
   }
   .toast.show { transform:translateX(-50%) translateY(0); }
   .archive-day {
@@ -330,6 +332,20 @@ try {
   }
   .archive-day:first-child { margin-top: 0; }
 
+  .sync-pill {
+    align-items:center; gap:6px;
+    font-size:11px; font-weight:800; letter-spacing:0.02em;
+    padding: 6px 10px; border-radius: 999px; min-height:32px;
+    background: var(--surface-2); color: var(--text-dim); border:1px solid var(--border);
+  }
+  .sync-pill.live { background: rgba(34,197,94,0.16); color: var(--success); border-color: rgba(34,197,94,0.4); }
+  .sync-pill.err { background: rgba(239,68,68,0.15); color: var(--urgent); border-color: rgba(239,68,68,0.35); }
+  .settings-block { margin-top: 16px; }
+  .settings-block .form-label { margin-top: 10px; }
+  .settings-help { font-size:13px; font-weight:600; color: var(--text-dim); line-height:1.45; margin: 0 0 12px; }
+  .sync-status-line { font-size:13px; font-weight:800; color: var(--text-dim); margin: 0 0 12px; }
+  .sync-status-line.live { color: var(--success); }
+  .sync-status-line.err { color: var(--urgent); }
   .settings-row {
     display:flex; justify-content:space-between; align-items:center; gap:12px;
     min-height:56px; padding: 14px 16px;
@@ -362,6 +378,7 @@ try {
   <div class="header-top">
     <div class="logo">Shop<span>Flow</span></div>
     <div class="header-right">
+      <div class="sync-pill" id="syncPill" hidden>On phone</div>
       <div class="date-badge" id="currentDate">Loading...</div>
       <button class="icon-btn" type="button" onclick="toggleHeaderMenu(event)" title="More" aria-label="More">⋯</button>
       <div class="header-menu" id="headerMenu">
@@ -378,15 +395,16 @@ try {
 
 <div class="section" id="toolsSection">
   <div id="toolsList"></div>
-  <div class="hint">Open a job type so you don't forget the gear. Reset clears checks.</div>
 </div>
 
 <div class="section" id="archiveSection">
   <div id="archiveList"></div>
-  <div class="hint">History stays on this phone until you delete it.</div>
+  <div class="hint">Completed jobs stay on the shared board until you delete them.</div>
 </div>
 
-<button class="fab" id="fab" onclick="openModal()" aria-label="Add job">+</button>
+<div class="add-bar" id="addBar">
+  <button class="btn btn-primary" type="button" onclick="openModal()">+ New job</button>
+</div>
 
 <nav class="tabbar" aria-label="Main">
   <button type="button" class="tabbar-btn active" data-tab="jobs" onclick="switchTab('jobs')">Jobs</button>
@@ -465,6 +483,31 @@ try {
       <span class="settings-label">Light mode</span>
       <input class="toggle" type="checkbox" id="lightModeToggle" onchange="setLightMode(this.checked)" aria-label="Light mode">
     </div>
+    <div class="settings-block">
+      <div class="settings-label" style="margin-bottom:8px">Share with partner</div>
+      <p class="sync-status-line" id="syncStatusLine">On this phone only</p>
+      <p class="settings-help">Jobs and Done sync between your two phones. Truck tools stay on this phone. Your job list always works here, signed in or not.</p>
+      <p class="settings-help" id="crewEmailWarning" style="color:var(--urgent)" hidden>Both crew emails still need filling in at the top of shopflow.html before the database rules will let anyone in.</p>
+
+      <div id="signedOutWrap">
+        <label class="form-label" for="authEmail">Email</label>
+        <input type="email" class="form-input" id="authEmail" placeholder="you@example.com" autocomplete="username" autocapitalize="none" spellcheck="false">
+        <label class="form-label" for="authPassword">Password</label>
+        <input type="password" class="form-input" id="authPassword" placeholder="Your password" autocomplete="current-password">
+        <div class="modal-actions" style="position:static;padding-top:12px">
+          <button type="button" class="btn btn-ghost" onclick="resetPassword()">Forgot</button>
+          <button type="button" class="btn btn-primary" onclick="signIn()">Sign in</button>
+        </div>
+      </div>
+
+      <div id="signedInWrap" hidden>
+        <div class="settings-row" style="margin-bottom:10px">
+          <span class="settings-label" id="signedInAs" style="font-size:14px;overflow:hidden;text-overflow:ellipsis"></span>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" style="width:100%;margin-bottom:8px" onclick="copyFirebaseRules()">Copy database rules</button>
+        <button type="button" class="btn btn-danger btn-sm" style="width:100%" onclick="signOutShop()">Sign out</button>
+      </div>
+    </div>
     <div class="modal-actions">
       <button type="button" class="btn btn-primary" onclick="closeSettings()">Done</button>
     </div>
@@ -473,11 +516,56 @@ try {
 
 <div class="toast" id="toast"><span id="toastMsg">Saved!</span></div>
 
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
 <script>
+// Put each phone's sign-in address here, then paste the generated rules into
+// Firebase. Only these two addresses can reach the board.
 const TECHS = [
-  { id: 'antonio', name: 'Antonio' },
-  { id: 'anthony', name: 'Anthony' }
+  { id: 'antonio', name: 'Antonio', email: '22sonars@proton.me' },
+  { id: 'anthony', name: 'Anthony', email: 'antcar1repair@gmail.com' }
 ];
+
+// One shared board. Both accounts land here, so there is no code to mistype.
+const BOARD_ID = 'antonio-anthony';
+
+// Public by design: this only says which project to talk to. The rules below
+// are what actually restrict access.
+const FIREBASE_CONFIG = {
+  apiKey: 'AIzaSyDw3j0TFG-VJ28splI0S411AoPvcoAFSc4',
+  authDomain: 'shopflow-2bad9.firebaseapp.com',
+  databaseURL: 'https://shopflow-2bad9-default-rtdb.firebaseio.com',
+  projectId: 'shopflow-2bad9',
+  storageBucket: 'shopflow-2bad9.firebasestorage.app',
+  messagingSenderId: '643704117404',
+  appId: '1:643704117404:web:8a5e31cb038359d8657559'
+};
+
+const SYNC_LS = 'shopflow_sync';
+
+function crewEmails() {
+  return TECHS.map(t => (t.email || '').trim().toLowerCase()).filter(Boolean);
+}
+
+// Access is pinned to the two addresses rather than "any signed-in user",
+// because anyone can self-register against a public Firebase API key.
+function firebaseRulesText() {
+  const emails = crewEmails();
+  const allow = emails.length
+    ? emails.map(e => `auth.token.email === '${e}'`).join(' || ')
+    : 'false';
+  return `{
+  "rules": {
+    "boards": {
+      "${BOARD_ID}": {
+        ".read": "auth != null && (${allow})",
+        ".write": "auth != null && (${allow})"
+      }
+    }
+  }
+}`;
+}
 
 const TRUCK_TOOLS = [
   {
@@ -494,11 +582,11 @@ const TRUCK_TOOLS = [
   },
   {
     name: 'Alternator',
-    tools: ['Socket set', 'Wrench set', 'Belt tool', 'Alternator']
+    tools: ['Socket set', 'Wrench set', 'Belt tool', 'Test light/multimeter']
   },
   {
-    name: 'Battery / jump',
-    tools: ['Jump pack', 'Socket set', 'Terminal brush']
+    name: 'Battery test',
+    tools: ['Jump pack', 'Socket set', 'Terminal brush', 'Test light/multimeter']
   },
   {
     name: 'AC',
@@ -506,7 +594,7 @@ const TRUCK_TOOLS = [
   },
   {
     name: 'Diag',
-    tools: ['OBD2 scanner', 'Multimeter', 'Test light', 'Jump pack / cables', 'Wire kit / heat shrink']
+    tools: ['OBD2 scanner', 'Multimeter / test light', 'Flashlight', 'Jump pack / cables', 'Screwdrivers']
   }
 ];
 
@@ -517,7 +605,7 @@ const STATUS_LABELS = {
 };
 
 let data = {
-  version: 10,
+  version: 14,
   jobs: [],
   toolCategories: TRUCK_TOOLS,
   toolState: {},
@@ -531,6 +619,21 @@ let expandedIds = new Set();
 let expandedToolCats = new Set();
 let currentTab = 'jobs';
 
+const sync = {
+  status: 'off',
+  error: '',
+  applying: false,
+  seenFirst: false,
+  ref: null,
+  connRef: null,
+  timer: null,
+  app: null
+};
+
+// Ids waiting to reach the cloud. Persisted, so edits made with no signal
+// still win over the stale snapshot we get back when the phone reconnects.
+const dirty = { jobs: new Set(), archive: new Set(), full: false };
+
 function init() {
   const saved = localStorage.getItem('shopflow_data');
   if (saved) {
@@ -541,10 +644,34 @@ function init() {
   applyTheme(data.theme);
   updateDate();
   renderAll();
+  loadDirty();
+  updateSyncUi();
   setInterval(updateDate, 60000);
   document.addEventListener('click', () => closeHeaderMenu());
   document.getElementById('jobsList').addEventListener('click', onJobsClick);
   document.getElementById('archiveList').addEventListener('click', onArchiveClick);
+  watchAuth();
+}
+
+// Sync follows the sign-in state. Firebase restores the session from storage,
+// so a returning phone reconnects on its own with nothing typed.
+function watchAuth() {
+  if (!firebaseReady()) {
+    setSyncStatus('off');
+    return;
+  }
+  try {
+    firebaseApp();
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) startSync();
+      else {
+        stopSync();
+        setSyncStatus('off');
+      }
+    });
+  } catch (err) {
+    setSyncStatus('error', err.message || String(err));
+  }
 }
 
 function migrate(parsed) {
@@ -557,16 +684,22 @@ function migrate(parsed) {
 
   const archiveJobs = archive.map(normalizeJob);
 
-  const useTruckTools = !parsed.version || parsed.version < 10 || !Array.isArray(parsed.toolCategories);
+  const useTruckTools = !parsed.version || parsed.version < 14 || !Array.isArray(parsed.toolCategories);
   data = {
-    version: 10,
+    version: 14,
     jobs: activeJobs,
     archive: archiveJobs,
     toolCategories: useTruckTools ? TRUCK_TOOLS : parsed.toolCategories,
     toolState: useTruckTools ? {} : (parsed.toolState || {}),
     theme: parsed.theme === 'light' ? 'light' : 'dark'
   };
-  saveData();
+  // Normalizing legacy local data is not a board edit; it reaches the cloud
+  // with the next real change.
+  saveData({ cloud: false });
+}
+
+function newJobId() {
+  return 'j' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
 function normalizeJob(job) {
@@ -579,7 +712,7 @@ function normalizeJob(job) {
     else assignedTo = '';
   }
   return {
-    id: job.id || ('j' + Date.now() + Math.random().toString(16).slice(2)),
+    id: job.id || newJobId(),
     customer: job.customer || '',
     phone: job.phone || '',
     vehicle: job.vehicle || '',
@@ -596,8 +729,444 @@ function normalizeJob(job) {
   };
 }
 
-function saveData() {
+function persistLocal() {
   localStorage.setItem('shopflow_data', JSON.stringify(data));
+}
+
+// opts.jobs / opts.archive name the ids that changed so the cloud write only
+// touches those paths and leaves the other phone's edits alone. Passing
+// neither forces a whole-board write.
+function saveData(opts) {
+  persistLocal();
+  if (opts && opts.cloud === false) return;
+  if (opts && (opts.jobs || opts.archive)) {
+    idList(opts.jobs).forEach(id => dirty.jobs.add(id));
+    idList(opts.archive).forEach(id => dirty.archive.add(id));
+  } else {
+    dirty.full = true;
+  }
+  persistDirty();
+  scheduleCloudPush();
+}
+
+function idList(v) {
+  if (!v) return [];
+  return Array.isArray(v) ? v.filter(Boolean) : [v];
+}
+
+function hasDirty() {
+  return dirty.full || dirty.jobs.size > 0 || dirty.archive.size > 0;
+}
+
+function persistDirty() {
+  const prefs = readSyncPrefs();
+  // Only worth persisting once this phone is actually on the shared board.
+  if (prefs.joinedBoard !== BOARD_ID) return;
+  prefs.pending = {
+    jobs: Array.from(dirty.jobs),
+    archive: Array.from(dirty.archive),
+    full: dirty.full
+  };
+  writeSyncPrefs(prefs);
+}
+
+function loadDirty() {
+  const pending = readSyncPrefs().pending || {};
+  dirty.jobs = new Set(Array.isArray(pending.jobs) ? pending.jobs : []);
+  dirty.archive = new Set(Array.isArray(pending.archive) ? pending.archive : []);
+  dirty.full = !!pending.full;
+}
+
+function takeDirty() {
+  const batch = {
+    jobs: Array.from(dirty.jobs),
+    archive: Array.from(dirty.archive),
+    full: dirty.full
+  };
+  dirty.jobs.clear();
+  dirty.archive.clear();
+  dirty.full = false;
+  persistDirty();
+  return batch;
+}
+
+function restoreDirty(batch) {
+  batch.jobs.forEach(id => dirty.jobs.add(id));
+  batch.archive.forEach(id => dirty.archive.add(id));
+  if (batch.full) dirty.full = true;
+  persistDirty();
+}
+
+function readSyncPrefs() {
+  try {
+    return JSON.parse(localStorage.getItem(SYNC_LS) || '{}') || {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function writeSyncPrefs(prefs) {
+  localStorage.setItem(SYNC_LS, JSON.stringify(prefs));
+}
+
+function firebaseReady() {
+  return typeof firebase !== 'undefined' && firebase.auth && firebase.database;
+}
+
+// One app instance, created lazily so a failed CDN load can't break startup.
+function firebaseApp() {
+  if (!firebaseReady()) return null;
+  if (!firebase.apps.length) return firebase.initializeApp(FIREBASE_CONFIG);
+  return firebase.app();
+}
+
+function currentUser() {
+  if (!firebaseReady()) return null;
+  try {
+    return firebase.auth().currentUser;
+  } catch (e) {
+    return null;
+  }
+}
+
+function asJobArray(v) {
+  if (!v) return [];
+  if (Array.isArray(v)) return v.filter(Boolean);
+  return Object.keys(v).map(k => v[k]).filter(Boolean);
+}
+
+function jobForCloud(job) {
+  return {
+    id: job.id || '',
+    customer: job.customer || '',
+    phone: job.phone || '',
+    vehicle: job.vehicle || '',
+    address: job.address || '',
+    when: job.when || '',
+    desc: job.desc || '',
+    priority: job.priority || 'normal',
+    assignedTo: job.assignedTo || '',
+    status: job.status || 'queued',
+    tools: job.tools || '',
+    notes: job.notes || '',
+    createdAt: job.createdAt || Date.now(),
+    completedAt: job.completedAt || null
+  };
+}
+
+function cloudPayload() {
+  const jobs = {};
+  data.jobs.forEach(j => { jobs[j.id] = jobForCloud(j); });
+  const archive = {};
+  data.archive.forEach(j => { archive[j.id] = jobForCloud(j); });
+  return {
+    version: data.version,
+    jobs,
+    archive,
+    updatedAt: Date.now()
+  };
+}
+
+function unionById(primary, extra) {
+  const map = new Map();
+  primary.forEach(j => map.set(j.id, j));
+  extra.forEach(j => { if (!map.has(j.id)) map.set(j.id, j); });
+  return Array.from(map.values());
+}
+
+function applyCloud(remote) {
+  const safe = remote && typeof remote === 'object' ? remote : {};
+  const jobs = overlayPending(asJobArray(safe.jobs).map(normalizeJob), data.jobs, dirty.jobs);
+  const archive = overlayPending(asJobArray(safe.archive).map(normalizeJob), data.archive, dirty.archive);
+  const archiveIds = new Set(archive.map(j => j.id));
+  data.jobs = jobs.filter(j => !archiveIds.has(j.id));
+  data.archive = archive;
+}
+
+// A snapshot was built before our queued writes landed, so for those ids the
+// local copy is the newer one. An id queued but no longer held locally was
+// deleted or moved here, and must not come back.
+function overlayPending(remoteList, localList, pendingIds) {
+  const map = new Map();
+  remoteList.forEach(j => map.set(j.id, j));
+  pendingIds.forEach(id => {
+    const local = localList.find(j => j.id === id);
+    if (local) map.set(id, local);
+    else map.delete(id);
+  });
+  return Array.from(map.values());
+}
+
+function setSyncStatus(status, error) {
+  sync.status = status;
+  sync.error = error || '';
+  updateSyncUi();
+}
+
+function updateSyncUi() {
+  const pill = document.getElementById('syncPill');
+  const line = document.getElementById('syncStatusLine');
+  const user = currentUser();
+
+  let label = user ? 'Signed in — connecting…' : 'On this phone only';
+  let pillText = '';
+  let pillClass = 'sync-pill';
+  let lineClass = 'sync-status-line';
+  if (sync.status === 'connecting') {
+    label = 'Connecting…';
+    pillText = 'Syncing';
+  } else if (sync.status === 'live') {
+    label = 'Live — jobs show on both phones';
+    pillText = 'Live';
+    pillClass += ' live';
+    lineClass += ' live';
+  } else if (sync.status === 'error') {
+    label = 'Sync error: ' + (sync.error || 'check the Firebase rules');
+    pillText = 'Sync off';
+    pillClass += ' err';
+    lineClass += ' err';
+  } else if (user && hasDirty()) {
+    // Signed in but not connected: edits are safe and waiting.
+    label = 'Waiting for signal — changes will sync';
+    pillText = 'Queued';
+  }
+  if (line) {
+    line.className = lineClass;
+    line.textContent = label;
+  }
+  if (pill) {
+    pill.className = pillClass;
+    pill.textContent = pillText;
+    pill.hidden = !pillText;
+  }
+  updateAuthUi();
+}
+
+function updateAuthUi() {
+  const user = currentUser();
+  const signedOut = document.getElementById('signedOutWrap');
+  const signedIn = document.getElementById('signedInWrap');
+  const who = document.getElementById('signedInAs');
+  const warn = document.getElementById('crewEmailWarning');
+  if (signedOut) signedOut.hidden = !!user;
+  if (signedIn) signedIn.hidden = !user;
+  if (who && user) who.textContent = user.email || 'signed in';
+  if (warn) warn.hidden = crewEmails().length >= 2;
+}
+
+function scheduleCloudPush() {
+  if (sync.applying || !sync.ref) return;
+  clearTimeout(sync.timer);
+  sync.timer = setTimeout(pushCloud, 250);
+}
+
+function pushCloud() {
+  if (sync.applying || !sync.ref || !hasDirty()) return;
+  const ref = sync.ref;
+  const batch = takeDirty();
+  // A rejected write keeps its ids queued so the next push carries them.
+  const fail = err => {
+    restoreDirty(batch);
+    setSyncStatus('error', err.message || String(err));
+  };
+  if (batch.full) {
+    ref.set(cloudPayload()).catch(fail);
+    return;
+  }
+  const updates = { updatedAt: Date.now() };
+  batch.jobs.forEach(id => {
+    const job = data.jobs.find(j => j.id === id);
+    updates['jobs/' + id] = job ? jobForCloud(job) : null;
+  });
+  batch.archive.forEach(id => {
+    const job = data.archive.find(j => j.id === id);
+    updates['archive/' + id] = job ? jobForCloud(job) : null;
+  });
+  ref.update(updates).catch(fail);
+}
+
+function pushFull() {
+  dirty.full = true;
+  persistDirty();
+  pushCloud();
+}
+
+function stopSync() {
+  clearTimeout(sync.timer);
+  if (sync.ref) {
+    try { sync.ref.off(); } catch (e) {}
+  }
+  if (sync.connRef) {
+    try { sync.connRef.off(); } catch (e) {}
+  }
+  sync.ref = null;
+  sync.connRef = null;
+  sync.seenFirst = false;
+}
+
+function startSync() {
+  stopSync();
+  loadDirty();
+  if (!currentUser()) {
+    setSyncStatus('off');
+    return;
+  }
+  if (!firebaseReady()) {
+    setSyncStatus('error', 'Firebase failed to load (need internet)');
+    return;
+  }
+  setSyncStatus('connecting');
+  try {
+    sync.app = firebaseApp();
+    const db = firebase.database();
+    sync.seenFirst = false;
+    sync.ref = db.ref('boards/' + BOARD_ID);
+    sync.connRef = db.ref('.info/connected');
+    sync.connRef.on('value', snap => {
+      if (!sync.ref) return;
+      if (snap.val() === true && sync.status !== 'error') setSyncStatus(sync.seenFirst ? 'live' : 'connecting');
+    });
+    sync.ref.on('value', snap => {
+      const remote = snap.val();
+      if (!sync.seenFirst) {
+        sync.seenFirst = true;
+        handleFirstSnap(remote);
+        return;
+      }
+      // Our own writes always leave updatedAt behind, so a missing node means
+      // the board was deleted out from under us. Reseed it, don't mirror it.
+      if (!remote) {
+        pushFull();
+        return;
+      }
+      if (dirty.full) {
+        pushCloud();
+        return;
+      }
+      sync.applying = true;
+      applyCloud(remote);
+      persistLocal();
+      sync.applying = false;
+      renderAll();
+      if (hasDirty()) scheduleCloudPush();
+    }, err => {
+      setSyncStatus('error', err.message || String(err));
+    });
+  } catch (err) {
+    setSyncStatus('error', err.message || String(err));
+  }
+}
+
+function handleFirstSnap(remote) {
+  const prefs = readSyncPrefs();
+  const joined = prefs.joinedBoard === BOARD_ID;
+  if (!remote) {
+    writeSyncPrefs(Object.assign({}, prefs, { joinedBoard: BOARD_ID }));
+    pushFull();
+    setSyncStatus('live');
+    return;
+  }
+  if (!joined) {
+    // Joining a board for the first time: fold whatever this phone already
+    // had into the shared list rather than picking a winner.
+    const remoteJobs = asJobArray(remote.jobs).map(normalizeJob);
+    const remoteArch = asJobArray(remote.archive).map(normalizeJob);
+    data.jobs = unionById(remoteJobs, data.jobs.map(normalizeJob));
+    data.archive = unionById(remoteArch, data.archive.map(normalizeJob));
+    const archIds = new Set(data.archive.map(j => j.id));
+    data.jobs = data.jobs.filter(j => !archIds.has(j.id));
+    persistLocal();
+    renderAll();
+    writeSyncPrefs(Object.assign({}, readSyncPrefs(), { joinedBoard: BOARD_ID }));
+    pushFull();
+  } else {
+    sync.applying = true;
+    applyCloud(remote);
+    persistLocal();
+    sync.applying = false;
+    renderAll();
+    // Anything queued from an offline session goes out now.
+    if (hasDirty()) scheduleCloudPush();
+  }
+  setSyncStatus('live');
+}
+
+// Sign-in only, never sign-up: the accounts are created once in the Firebase
+// console so a stranger can't register themselves onto the board.
+async function signIn() {
+  const emailEl = document.getElementById('authEmail');
+  const passEl = document.getElementById('authPassword');
+  const email = (emailEl.value || '').trim();
+  const password = passEl.value || '';
+  if (!email || !password) {
+    showToast('Enter your email and password');
+    return;
+  }
+  if (!firebaseReady()) {
+    showToast('No connection — try again with signal');
+    return;
+  }
+  try {
+    firebaseApp();
+    showToast('Signing in…');
+    await firebase.auth().signInWithEmailAndPassword(email, password);
+    passEl.value = '';
+    showToast('Signed in');
+  } catch (err) {
+    showToast(signInError(err));
+  }
+}
+
+function signInError(err) {
+  const code = (err && err.code) || '';
+  if (code === 'auth/invalid-email') return 'That email looks wrong';
+  if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') return 'Wrong email or password';
+  if (code === 'auth/user-not-found') return 'No account for that email';
+  if (code === 'auth/too-many-requests') return 'Too many tries — wait a minute';
+  if (code === 'auth/network-request-failed') return 'No connection — try again with signal';
+  return (err && err.message) || 'Could not sign in';
+}
+
+async function signOutShop() {
+  stopSync();
+  const prefs = readSyncPrefs();
+  // Keep the pending queue: those edits still belong to this board.
+  writeSyncPrefs({ joinedBoard: prefs.joinedBoard, pending: prefs.pending });
+  try {
+    if (firebaseReady()) await firebase.auth().signOut();
+  } catch (e) {}
+  setSyncStatus('off');
+  showToast('Signed out — this phone only');
+}
+
+async function resetPassword() {
+  const email = (document.getElementById('authEmail').value || '').trim();
+  if (!email) {
+    showToast('Enter your email first');
+    return;
+  }
+  if (!firebaseReady()) {
+    showToast('No connection — try again with signal');
+    return;
+  }
+  try {
+    firebaseApp();
+    await firebase.auth().sendPasswordResetEmail(email);
+    showToast('Reset email sent');
+  } catch (err) {
+    showToast(signInError(err));
+  }
+}
+
+async function copyFirebaseRules() {
+  try {
+    await navigator.clipboard.writeText(firebaseRulesText());
+    showToast(crewEmails().length >= 2
+      ? 'Rules copied — paste in Firebase'
+      : 'Add both emails in the file first');
+  } catch (e) {
+    showToast('Copy failed — see the chat for rules');
+  }
 }
 
 function updateDate() {
@@ -610,7 +1179,7 @@ function switchTab(tab) {
   currentTab = tab;
   document.querySelectorAll('.tabbar-btn').forEach(p => p.classList.toggle('active', p.dataset.tab === tab));
   document.querySelectorAll('.section').forEach(s => s.classList.toggle('active', s.id === tab + 'Section'));
-  document.getElementById('fab').hidden = tab !== 'jobs';
+  document.getElementById('addBar').hidden = tab !== 'jobs';
   closeHeaderMenu();
 }
 
@@ -637,12 +1206,13 @@ function applyTheme(theme) {
 function setLightMode(on) {
   data.theme = on ? 'light' : 'dark';
   applyTheme(data.theme);
-  saveData();
+  saveData({ cloud: false });
 }
 
 function openSettings() {
   closeHeaderMenu();
   applyTheme(data.theme);
+  updateSyncUi();
   document.getElementById('settingsOverlay').classList.add('active');
 }
 
@@ -708,7 +1278,7 @@ function renderJobs() {
     list.innerHTML = `
       <div class="empty-state">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-        <p>No jobs yet. Tap + to add one.</p>
+        <p>No jobs yet. Tap New job below.</p>
       </div>`;
     return;
   }
@@ -813,7 +1383,7 @@ function setJobStatus(id, status) {
   const job = data.jobs.find(j => j.id === id);
   if (!job) return;
   job.status = status;
-  saveData();
+  saveData({ jobs: id });
   renderJobs();
   showToast((job.customer || 'Job') + ': ' + (STATUS_LABELS[status] || status));
 }
@@ -824,7 +1394,7 @@ function cycleAssign(id) {
   const order = ['', 'antonio', 'anthony'];
   const i = order.indexOf(job.assignedTo || '');
   job.assignedTo = order[(i < 0 ? 0 : i + 1) % order.length];
-  saveData();
+  saveData({ jobs: id });
   renderJobs();
 }
 
@@ -917,7 +1487,7 @@ function toggleToolCat(ci) {
 
 function toggleTool(key) {
   data.toolState[key] = !data.toolState[key];
-  saveData();
+  saveData({ cloud: false });
   renderTools();
 }
 
@@ -925,7 +1495,7 @@ function resetTruckChecklist() {
   if (!confirm('Reset tools checklist for a new day?')) return;
   data.toolState = {};
   expandedToolCats = new Set();
-  saveData();
+  saveData({ cloud: false });
   renderTools();
   showToast('Checklist reset');
 }
@@ -1029,7 +1599,7 @@ function saveJob(e) {
   if (document.getElementById('jobOnsiteNow').checked) status = 'onsite';
 
   const job = normalizeJob({
-    id: editingId || ('j' + Date.now()),
+    id: editingId || newJobId(),
     customer: document.getElementById('custName').value.trim(),
     phone: document.getElementById('custPhone').value.trim(),
     vehicle: document.getElementById('custVehicle').value.trim(),
@@ -1051,7 +1621,7 @@ function saveJob(e) {
     data.jobs.push(job);
   }
 
-  saveData();
+  saveData({ jobs: job.id });
   closeModal();
   renderAll();
   showToast(editingId ? 'Job updated' : 'Job added');
@@ -1069,7 +1639,7 @@ function archiveJob(id) {
   data.archive.push(job);
   data.jobs.splice(idx, 1);
   expandedIds.delete(id);
-  saveData();
+  saveData({ jobs: id, archive: id });
   renderAll();
   showToast('Job completed');
 }
@@ -1082,7 +1652,7 @@ function restoreJob(id) {
   job.status = 'queued';
   data.jobs.push(job);
   data.archive.splice(idx, 1);
-  saveData();
+  saveData({ jobs: id, archive: id });
   renderAll();
   switchTab('jobs');
   showToast('Job restored');
@@ -1095,7 +1665,7 @@ function deleteJob(id, fromArchive = false) {
   } else {
     data.jobs = data.jobs.filter(j => j.id !== id);
   }
-  saveData();
+  saveData(fromArchive ? { archive: id } : { jobs: id });
   renderAll();
   showToast('Deleted');
 }
@@ -1163,6 +1733,12 @@ function formatShareJob(j) {
     who
   ].filter(Boolean);
   return `• ${bits.join(' — ')}`;
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
 }
 
 init();
