@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'shopflow-shell-v1';
-const RUNTIME_CACHE = 'shopflow-runtime-v1';
+const SHELL_CACHE = 'shopflow-shell-v2';
+const RUNTIME_CACHE = 'shopflow-runtime-v2';
 const KEEP = [SHELL_CACHE, RUNTIME_CACHE];
 
 const SHELL = [

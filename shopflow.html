@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ShopFlow">
-<meta name="theme-color" content="#0b0f19">
+<meta name="theme-color" content="#12110f">
 <title>ShopFlow - Mobile Job Board</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="shopflow-icon.png">
@@ -20,42 +20,37 @@ try {
 </script>
 <style>
   :root {
-    --bg: #0b0f19;
-    --surface: #151b2b;
-    --surface-2: #1e2538;
-    --border: #2a324a;
-    --text: #e2e8f0;
-    --text-dim: #94a3b8;
-    --accent: #f59e0b;
-    --accent-2: #3b82f6;
-    --urgent: #ef4444;
-    --warning: #f97316;
-    --success: #22c55e;
-    --waiting: #a855f7;
-    --radius: 16px;
-    --shadow: 0 8px 24px rgba(0,0,0,0.35);
-    --header-bg: rgba(11, 15, 25, 0.88);
-    --tabbar-bg: rgba(15, 20, 32, 0.94);
-    --overlay: rgba(0, 0, 0, 0.7);
-    --tabbar-h: 64px;
+    --bg: #12110f;
+    --surface: #1a1916;
+    --surface-2: #23221e;
+    --border: #33322c;
+    --text: #f2efe8;
+    --text-dim: #9a958a;
+    --accent: #e3a31a;
+    --urgent: #c85a4a;
+    --success: #6f8f6a;
+    --radius: 10px;
+    --header-bg: rgba(18, 17, 15, 0.94);
+    --tabbar-bg: rgba(18, 17, 15, 0.96);
+    --overlay: rgba(0, 0, 0, 0.62);
+    --tabbar-h: 56px;
+    --page-w: 480px;
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     color-scheme: dark;
   }
   [data-theme="light"] {
-    --bg: #f3f5fa;
-    --surface: #ffffff;
-    --surface-2: #e8edf6;
-    --border: #cfd6e6;
-    --text: #0f172a;
-    --text-dim: #5b6578;
-    --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
-    --header-bg: rgba(243, 245, 250, 0.92);
-    --tabbar-bg: rgba(255, 255, 255, 0.94);
-    --overlay: rgba(15, 23, 42, 0.4);
+    --bg: #f3efe6;
+    --surface: #fbf8f2;
+    --surface-2: #ebe6db;
+    --border: #d4cfc2;
+    --text: #1c1a16;
+    --text-dim: #6b665c;
+    --header-bg: rgba(243, 239, 230, 0.94);
+    --tabbar-bg: rgba(251, 248, 242, 0.96);
+    --overlay: rgba(28, 26, 22, 0.4);
     color-scheme: light;
   }
-  [data-theme="light"] .btn-wait { color: #6b21a8; }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html { background: var(--bg); }
   body {
@@ -64,223 +59,209 @@ try {
     color: var(--text);
     min-height: 100vh;
     min-height: 100dvh;
-    padding-bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 84px);
+    padding-bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 12px);
     overflow-x: hidden;
+    font-weight: 500;
   }
   .header {
     background: var(--header-bg);
-    padding: calc(10px + var(--safe-top)) 16px 10px;
+    padding: calc(8px + var(--safe-top)) 16px 8px;
     position: sticky; top:0; z-index:100;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--border);
   }
   .header-top {
-    display:flex; justify-content:space-between; align-items:center; gap:12px;
+    display:flex; justify-content:space-between; align-items:center; gap:10px;
+    max-width: var(--page-w); margin: 0 auto;
   }
-  .logo { font-size:20px; font-weight:800; letter-spacing:-0.4px; line-height:1; }
-  .logo span { color: var(--accent); }
+  .logo {
+    display:flex; align-items:center; gap:8px;
+    font-size:17px; font-weight:600; letter-spacing:-0.03em; line-height:1;
+  }
+  .logo img { width:22px; height:22px; border-radius:6px; }
   .header-right { display:flex; align-items:center; gap:8px; position:relative; }
-  .date-badge {
-    background: var(--surface-2); border:1px solid var(--border);
-    padding: 8px 12px; border-radius: 999px; font-size:13px; font-weight:700;
-    color: var(--accent); min-height:44px; display:flex; align-items:center;
+  .text-btn {
+    background: var(--accent); border:none; color:#1a1406;
+    font: inherit; font-size:14px; font-weight:600;
+    min-height:36px; padding: 0 14px; border-radius: 999px; cursor:pointer;
   }
+  .text-btn:active { transform: scale(0.98); opacity:0.9; }
+  .text-btn[hidden] { display:none !important; }
   .icon-btn {
-    background: var(--surface-2); border:1px solid var(--border);
-    width:44px; height:44px; border-radius:12px;
+    background:none; border:none;
+    width:44px; height:44px; border-radius:10px;
     display:flex; align-items:center; justify-content:center;
-    color: var(--text); cursor:pointer; font-size:20px; font-weight:700;
+    color: var(--text-dim); cursor:pointer; font-size:20px; font-weight:600;
   }
   .header-menu {
-    display:none; position:absolute; right:0; top:calc(100% + 8px);
+    display:none; position:absolute; right:0; top:calc(100% + 6px);
     background: var(--surface); border:1px solid var(--border);
-    border-radius: 12px; min-width: 180px; overflow:hidden;
-    box-shadow: var(--shadow); z-index:120;
+    border-radius: 10px; min-width: 188px; overflow:hidden; z-index:120;
   }
   .header-menu.open { display:block; }
   .header-menu button {
     width:100%; text-align:left; background:none; border:none;
-    color: var(--text); font: inherit; font-weight:700; font-size:15px;
+    color: var(--text); font: inherit; font-weight:500; font-size:15px;
     padding: 14px 16px; cursor:pointer; min-height:44px;
   }
   .header-menu button:active { background: var(--surface-2); }
-  .section { display:none; padding: 16px; animation: fadeIn 0.25s ease; }
-  .section.active { display:block; }
-  @keyframes fadeIn { from { opacity:0; transform:translateY(8px);} to { opacity:1; transform:translateY(0);} }
+  .section { display:none; padding: 16px; animation: fadeIn 0.18s ease; }
+  .section.active { display:block; max-width: var(--page-w); margin: 0 auto; }
+  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
 
-  .job-group { margin-bottom: 22px; }
+  .job-group { margin-bottom: 26px; }
   .group-title {
-    font-size:13px; font-weight:800; margin: 0 0 10px;
-    display:flex; align-items:center; gap:8px; color: var(--text);
+    font-size:12px; font-weight:600; margin: 0 0 8px;
+    display:flex; align-items:center; gap:8px; color: var(--text-dim);
   }
-  .group-title .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-  .group-title .n { color: var(--text-dim); font-weight:700; }
+  .group-title .dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; background: var(--text-dim); }
+  .group-title .n { font-weight:500; }
   .dot-onsite { background: var(--success); }
-  .dot-waiting { background: var(--waiting); }
-  .dot-queued { background: var(--accent-2); }
 
   .card {
     background: var(--surface); border:1px solid var(--border);
-    border-radius: var(--radius); padding: 16px; margin-bottom: 12px;
-    box-shadow: var(--shadow); position:relative;
-    border-left: 4px solid var(--accent-2);
+    border-radius: var(--radius); padding: 16px 16px 10px; margin-bottom: 10px;
+    position:relative;
   }
-  .card.status-onsite { border-left-color: var(--success); }
-  .card.status-waiting { border-left-color: var(--waiting); }
-  .card.status-queued { border-left-color: var(--accent-2); }
   .card-top {
-    display:flex; justify-content:space-between; align-items:flex-start; gap:10px;
+    display:flex; justify-content:space-between; align-items:flex-start; gap:12px;
   }
-  .card-identity { font-size:18px; font-weight:800; line-height:1.25; }
+  .card-identity { font-size:17px; font-weight:600; line-height:1.25; letter-spacing:-0.02em; }
+  .who {
+    flex-shrink:0; color: var(--text-dim); font-size:13px; font-weight:500;
+    padding-top: 2px; max-width: 42%;
+  }
   .card-when {
-    margin-top:8px; font-size:16px; font-weight:700; color: var(--text);
-    display:flex; align-items:center; gap:8px;
+    margin-top:6px; font-size:15px; font-weight:500; color: var(--text);
   }
   .card-when.overdue { color: var(--urgent); }
   .card-where {
-    margin-top:4px; font-size:15px; font-weight:600; color: var(--text-dim);
+    margin-top:3px; font-size:14px; font-weight:500; color: var(--text-dim);
     line-height:1.35;
   }
   .card-job {
-    margin-top:12px; font-size:15px; font-weight:600; line-height:1.4; color: var(--text);
+    margin-top:10px; font-size:15px; font-weight:500; line-height:1.4; color: var(--text);
   }
-  .who-chip {
-    flex-shrink:0; padding: 8px 12px; border-radius: 999px;
-    border:1px solid rgba(245,158,11,0.45); background: rgba(245,158,11,0.16);
-    color: var(--accent); font-size:13px; font-weight:800;
-    max-width: 42%; pointer-events: none;
+  .urgent-mark {
+    margin-top:8px; font-size:13px; font-weight:600; color: var(--urgent);
   }
-  .urgent-pill {
-    display:inline-block; margin-top:8px;
-    padding: 4px 10px; border-radius: 8px; font-size:11px; font-weight:800;
-    letter-spacing: 0.04em; text-transform: uppercase;
-    background: rgba(239,68,68,0.15); color: var(--urgent); border:1px solid rgba(239,68,68,0.35);
+  .card-links {
+    display:flex; gap:16px; margin-top:10px;
   }
-  .card-actions {
-    display:flex; gap:8px; margin-top:14px;
+  .card-links a {
+    color: var(--text-dim); font-size:14px; font-weight:600;
+    text-decoration:none; min-height:44px; display:flex; align-items:center;
   }
+  .card-links a:active { color: var(--accent); }
+  .card-actions { display:flex; gap:8px; margin-top:6px; }
   .card-details { display:none; margin-top:12px; padding-top:12px; border-top:1px solid var(--border); }
   .card.expanded .card-details { display:block; }
   .card-notes {
-    padding:12px; border-radius:12px;
-    background: var(--surface-2); border:1px solid var(--border);
+    padding:12px; border-radius:8px;
+    background: var(--surface-2);
     font-size:14px; color: var(--text-dim); line-height:1.45; margin-bottom:10px;
   }
   .card-tools { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
   .tool-tag {
-    background: var(--surface-2); border:1px solid var(--border);
-    padding:6px 10px; border-radius:8px; font-size:12px; color: var(--text-dim); font-weight:600;
+    background: var(--surface-2);
+    padding:5px 9px; border-radius:6px; font-size:12px; color: var(--text-dim); font-weight:500;
   }
   .details-actions { display:flex; gap:8px; flex-wrap:wrap; }
   .details-actions .btn { flex:1 1 40%; }
   .details-toggle {
-    width:100%; margin-top:4px; min-height:44px;
+    width:auto; margin-top:2px; min-height:40px; padding:0;
     background:none; border:none; color: var(--text-dim);
-    font: inherit; font-size:13px; font-weight:700; cursor:pointer;
+    font: inherit; font-size:13px; font-weight:500; cursor:pointer;
   }
-  .card.expanded .details-toggle { color: var(--accent); }
+  .card.expanded .details-toggle { color: var(--text); }
 
   .btn {
-    flex:1; min-height:48px; padding:12px 14px; border-radius:12px; border:none;
-    font-size:15px; font-weight:800; cursor:pointer; text-align:center;
+    flex:1; min-height:46px; padding:12px 14px; border-radius:10px; border:none;
+    font-size:15px; font-weight:600; cursor:pointer; text-align:center;
     display:flex; align-items:center; justify-content:center;
     text-decoration:none; color: inherit;
   }
-  .btn-primary { background: var(--accent); color:#000; }
-  .btn-ghost { background: var(--surface-2); color: var(--text); border:1px solid var(--border); }
-  .btn-danger { background: rgba(239,68,68,0.15); color: var(--urgent); border:1px solid rgba(239,68,68,0.3); }
-  .btn-success { background: var(--success); color:#052e16; }
-  .btn-wait { background: rgba(168,85,247,0.16); color: #e9d5ff; border:1px solid rgba(168,85,247,0.35); }
+  .btn-primary { background: var(--accent); color:#1a1406; }
+  .btn-ghost { background: transparent; color: var(--text); border:1px solid var(--border); }
+  .btn-danger { background: transparent; color: var(--urgent); border:1px solid var(--border); }
   .btn:active { transform: scale(0.98); opacity:0.9; }
-  .btn-sm { min-height:44px; padding:10px 12px; flex:0 0 auto; font-size:13px; }
+  .btn-sm { min-height:42px; padding:10px 12px; flex:0 0 auto; font-size:13px; font-weight:600; }
 
   .tools-reset-row {
-    display:flex; justify-content:flex-end; margin-bottom:10px;
+    display:flex; justify-content:flex-end; margin-bottom:8px;
   }
-  .tools-reset-row .btn { flex:0 0 auto; min-width:88px; }
+  .tools-reset-row .btn { flex:0 0 auto; min-width:72px; }
 
   .tool-cat {
     background: var(--surface); border:1px solid var(--border);
-    border-radius: var(--radius); margin-bottom:12px; overflow:hidden;
+    border-radius: var(--radius); margin-bottom:10px; overflow:hidden;
   }
   .tool-cat-header {
-    padding:16px; background: var(--surface-2);
+    padding:14px 16px;
     display:flex; justify-content:space-between; align-items:center;
-    cursor:pointer; font-weight:800; font-size:15px; min-height:52px;
+    cursor:pointer; font-weight:600; font-size:15px; min-height:52px;
   }
   .tool-cat-header::after {
-    content: '▼'; font-size:10px; color: var(--text-dim);
-    transition: transform 0.2s;
+    content: '›'; font-size:22px; line-height:1; color: var(--text-dim);
+    transform: rotate(90deg); transition: transform 0.15s;
   }
-  .tool-cat.collapsed .tool-cat-header::after { transform: rotate(-90deg); }
+  .tool-cat.collapsed .tool-cat-header::after { transform: rotate(0deg); }
   .tool-cat.collapsed .tool-cat-body { display:none; }
-  .tool-cat-body { padding: 4px 16px 12px; }
+  .tool-cat-body { padding: 0 16px 10px; }
   .tool-check {
     display:flex; align-items:center; gap:12px; padding:12px 0;
-    border-bottom:1px solid var(--border); min-height:48px; cursor:pointer;
+    border-top:1px solid var(--border); min-height:48px; cursor:pointer;
   }
-  .tool-check:last-child { border-bottom:none; }
   .check-box {
-    width:28px; height:28px; border-radius:8px; border:2px solid var(--border);
+    width:24px; height:24px; border-radius:6px; border:1.5px solid var(--border);
     display:flex; align-items:center; justify-content:center;
-    flex-shrink:0; transition: all 0.15s;
+    flex-shrink:0;
   }
   .check-box.checked { background: var(--accent); border-color: var(--accent); }
-  .check-box.checked::after { content: '✓'; color:#000; font-weight:800; font-size:16px; }
-  .tool-check.checked span { text-decoration: line-through; opacity:0.5; }
-  .tool-check span { font-size:15px; font-weight:600; }
-
-  /* Docked above the tabbar instead of floating over the list, so it can
-     never cover a job's own action buttons. */
-  .add-bar {
-    position:fixed; left:0; right:0; z-index:200;
-    bottom: calc(var(--tabbar-h) + var(--safe-bottom));
-    display:flex; padding: 8px 16px;
-    background: var(--tabbar-bg);
-    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid var(--border);
-  }
-  .add-bar[hidden] { display:none !important; }
+  .check-box.checked::after { content: '✓'; color:#1a1406; font-weight:700; font-size:14px; }
+  .tool-check.checked span { text-decoration: line-through; opacity:0.45; }
+  .tool-check span { font-size:15px; font-weight:500; }
 
   .tabbar {
-    position:fixed; left:0; right:0; bottom:0; z-index:180;
+    position:fixed; left:50%; bottom:0; z-index:180;
+    width:100%; max-width: var(--page-w);
+    transform: translateX(-50%);
     display:grid; grid-template-columns: 1fr 1fr 1fr;
-    padding: 6px 8px var(--safe-bottom);
+    padding: 4px 8px var(--safe-bottom);
     min-height: calc(var(--tabbar-h) + var(--safe-bottom));
     background: var(--tabbar-bg);
-    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
     border-top: 1px solid var(--border);
   }
   .tabbar-btn {
-    min-height:52px; border:none; background:transparent;
-    color: var(--text-dim); font: inherit; font-weight:800; font-size:14px;
+    min-height:48px; border:none; background:transparent;
+    color: var(--text-dim); font: inherit; font-weight:500; font-size:14px;
     cursor:pointer; display:flex; align-items:center; justify-content:center;
-    border-radius:12px;
   }
-  .tabbar-btn.active { color: var(--accent); background: rgba(245,158,11,0.1); }
+  .tabbar-btn.active { color: var(--text); font-weight:600; }
 
   .modal-overlay {
     position:fixed; inset:0; background: var(--overlay);
-    backdrop-filter: blur(8px); z-index:300;
+    z-index:300;
     display:none; align-items:flex-end; justify-content:center;
   }
   .modal-overlay.active { display:flex; }
   .modal {
     background: var(--surface); width:100%; max-width:500px;
-    border-radius: var(--radius) var(--radius) 0 0;
+    border-radius: 14px 14px 0 0;
     padding: 20px 20px calc(16px + var(--safe-bottom));
     max-height: 92vh; overflow-y:auto;
-    animation: slideUp 0.28s ease;
+    animation: slideUp 0.24s ease;
   }
   @keyframes slideUp { from { transform:translateY(100%);} to { transform:translateY(0);} }
-  .modal-title { font-size:22px; font-weight:800; margin-bottom:16px; }
+  .modal-title { font-size:20px; font-weight:600; letter-spacing:-0.02em; margin-bottom:16px; }
   .form-group { margin-bottom:14px; }
-  .form-label { display:block; font-size:13px; font-weight:700; color:var(--text-dim); margin-bottom:6px; }
+  .form-label { display:block; font-size:12px; font-weight:500; color:var(--text-dim); margin-bottom:6px; }
   .form-input, .form-select, .form-textarea {
-    width:100%; padding:14px; border-radius:12px; min-height:48px;
+    width:100%; padding:13px 14px; border-radius:10px; min-height:48px;
     background: var(--surface-2); border:1px solid var(--border);
-    color: var(--text); font-size:16px; font-family:inherit;
+    color: var(--text); font-size:16px; font-family:inherit; font-weight:500;
     outline:none;
   }
   .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
@@ -288,21 +269,21 @@ try {
   .form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .chip-row { display:flex; flex-wrap:wrap; gap:8px; }
   .choice-chip {
-    min-height:44px; padding: 10px 14px; border-radius: 999px;
-    border:1px solid var(--border); background: var(--surface-2);
-    color: var(--text); font: inherit; font-size:14px; font-weight:800; cursor:pointer;
+    min-height:40px; padding: 8px 12px; border-radius: 8px;
+    border:1px solid var(--border); background: transparent;
+    color: var(--text); font: inherit; font-size:14px; font-weight:500; cursor:pointer;
   }
-  .choice-chip.active { background: var(--accent); color:#000; border-color: var(--accent); }
+  .choice-chip.active { background: var(--accent); color:#1a1406; border-color: var(--accent); }
   .more-toggle {
-    width:100%; min-height:44px; margin: 4px 0 10px;
-    background:none; border:none; color: var(--accent);
-    font: inherit; font-size:14px; font-weight:800; cursor:pointer; text-align:left;
+    width:100%; min-height:44px; margin: 4px 0 12px;
+    background:none; border:none; color: var(--text-dim);
+    font: inherit; font-size:14px; font-weight:500; cursor:pointer; text-align:left;
   }
   .form-more { display:none; }
-  .form-more.open { display:block; }
+  .form-more.open { display:block; padding-bottom: 8px; }
   .check-row {
     display:flex; align-items:center; gap:12px; min-height:48px;
-    padding: 8px 0; cursor:pointer; font-weight:700;
+    padding: 8px 0; cursor:pointer; font-weight:500;
   }
   .check-row input { width:22px; height:22px; accent-color: var(--accent); }
   .modal-actions {
@@ -310,46 +291,48 @@ try {
     background: var(--surface); padding-top:12px;
   }
   .modal-actions .btn { padding:14px; }
-  .hint { text-align:center; font-size:12px; color: var(--text-dim); padding: 8px; opacity:0.7; }
-  .empty-state { text-align:center; padding: 48px 20px; color: var(--text-dim); }
-  .empty-state svg { width:48px; height:48px; margin-bottom:12px; opacity:0.4; }
-  .empty-state p { font-size:15px; font-weight:600; }
+  .confirm-overlay { z-index: 360; }
+  .confirm-copy {
+    font-size:15px; font-weight:500; color: var(--text-dim);
+    line-height:1.45; margin: -6px 0 8px;
+  }
+  .hint { text-align:center; font-size:13px; color: var(--text-dim); padding: 16px 8px; }
+  .empty-state { padding: 36px 8px 12px; color: var(--text-dim); }
+  .empty-state p { font-size:15px; font-weight:500; }
   .toast {
-    position:fixed; top: calc(64px + var(--safe-top)); left:50%;
+    position:fixed; top: calc(56px + var(--safe-top)); left:50%;
     transform:translateX(-50%) translateY(-160px);
-    background: var(--surface-2); border:1px solid var(--border);
-    padding:12px 24px; border-radius:12px; font-weight:700; z-index:400;
-    box-shadow: var(--shadow); transition: transform 0.3s ease;
+    background: var(--surface); border:1px solid var(--border);
+    padding:12px 20px; border-radius:10px; font-weight:500; z-index:400;
+    transition: transform 0.25s ease;
     pointer-events: none;
   }
   .toast.show { transform:translateX(-50%) translateY(0); }
   .archive-day {
-    font-size:12px; font-weight:800; color: var(--text-dim);
-    margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.04em;
+    font-size:12px; font-weight:500; color: var(--text-dim);
+    margin: 16px 0 8px;
   }
   .archive-day:first-child { margin-top: 0; }
 
   .sync-pill {
-    align-items:center; gap:6px;
-    font-size:11px; font-weight:800; letter-spacing:0.02em;
-    padding: 6px 10px; border-radius: 999px; min-height:32px;
-    background: var(--surface-2); color: var(--text-dim); border:1px solid var(--border);
+    font-size:12px; font-weight:500;
+    padding: 0 8px; min-height:32px;
+    display:flex; align-items:center;
+    background: none; color: var(--text-dim); border: none;
   }
-  .sync-pill.live { background: rgba(34,197,94,0.16); color: var(--success); border-color: rgba(34,197,94,0.4); }
-  .sync-pill.err { background: rgba(239,68,68,0.15); color: var(--urgent); border-color: rgba(239,68,68,0.35); }
+  .sync-pill.live { color: var(--success); }
+  .sync-pill.err { color: var(--urgent); }
   .settings-block { margin-top: 16px; }
   .settings-block .form-label { margin-top: 10px; }
-  .settings-help { font-size:13px; font-weight:600; color: var(--text-dim); line-height:1.45; margin: 0 0 12px; }
-  .sync-status-line { font-size:13px; font-weight:800; color: var(--text-dim); margin: 0 0 12px; }
+  .settings-help { font-size:13px; font-weight:500; color: var(--text-dim); line-height:1.45; margin: 0 0 12px; }
+  .sync-status-line { font-size:13px; font-weight:500; color: var(--text-dim); margin: 0 0 12px; }
   .sync-status-line.live { color: var(--success); }
   .sync-status-line.err { color: var(--urgent); }
   .settings-row {
     display:flex; justify-content:space-between; align-items:center; gap:12px;
-    min-height:56px; padding: 14px 16px;
-    background: var(--surface-2); border:1px solid var(--border);
-    border-radius: 12px;
+    min-height:52px; padding: 12px 0;
   }
-  .settings-label { font-size:16px; font-weight:800; }
+  .settings-label { font-size:16px; font-weight:600; }
   .toggle {
     appearance: none; -webkit-appearance: none;
     width: 52px; height: 32px; border-radius: 999px;
@@ -359,24 +342,25 @@ try {
   .toggle::after {
     content: ''; position: absolute; top: 3px; left: 3px;
     width: 26px; height: 26px; border-radius: 50%;
-    background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    background: #fff;
     transition: transform 0.15s ease;
   }
   .toggle:checked { background: var(--accent); }
   .toggle:checked::after { transform: translateX(20px); }
-  .archive-card { padding: 14px 16px; border-left-color: var(--border); }
-  .archive-meta { margin-top:6px; font-size:13px; color: var(--text-dim); font-weight:600; }
-  .archive-actions { display:flex; gap:8px; margin-top:12px; }
+  .archive-card { padding: 14px 16px 10px; }
+  .archive-card .card-identity { font-size:16px; }
+  .archive-meta { margin-top:6px; font-size:13px; color: var(--text-dim); font-weight:500; }
+  .archive-actions { display:flex; gap:8px; margin-top:10px; }
 </style>
 </head>
 <body>
 
 <div class="header">
   <div class="header-top">
-    <div class="logo">Shop<span>Flow</span></div>
+    <div class="logo"><img src="shopflow-icon.png" alt="">ShopFlow</div>
     <div class="header-right">
       <div class="sync-pill" id="syncPill" hidden>On phone</div>
-      <div class="date-badge" id="currentDate">Loading...</div>
+      <button class="text-btn" id="newJobBtn" type="button" onclick="openModal()">+ Job</button>
       <button class="icon-btn" type="button" onclick="toggleHeaderMenu(event)" title="More" aria-label="More">⋯</button>
       <div class="header-menu" id="headerMenu">
         <button type="button" onclick="openSettings()">Settings</button>
@@ -397,10 +381,6 @@ try {
 <div class="section" id="archiveSection">
   <div id="archiveList"></div>
   <div class="hint">Completed jobs stay on the shared board until you delete them.</div>
-</div>
-
-<div class="add-bar" id="addBar">
-  <button class="btn btn-primary" type="button" onclick="openModal()">+ New job</button>
 </div>
 
 <nav class="tabbar" aria-label="Main">
@@ -481,10 +461,9 @@ try {
       <input class="toggle" type="checkbox" id="lightModeToggle" onchange="setLightMode(this.checked)" aria-label="Light mode">
     </div>
     <div class="settings-block">
-      <div class="settings-label" style="margin-bottom:8px">Share with partner</div>
+      <div class="settings-label" style="margin-bottom:8px;margin-top:8px">Share with partner</div>
       <p class="sync-status-line" id="syncStatusLine">On this phone only</p>
       <p class="settings-help">Jobs and Done sync between your two phones. Truck tools stay on this phone. Your job list always works here, signed in or not.</p>
-      <p class="settings-help" id="crewEmailWarning" style="color:var(--urgent)" hidden>Both crew emails still need filling in at the top of shopflow.html before the database rules will let anyone in.</p>
 
       <div id="signedOutWrap">
         <label class="form-label" for="authEmail">Email</label>
@@ -498,15 +477,25 @@ try {
       </div>
 
       <div id="signedInWrap" hidden>
-        <div class="settings-row" style="margin-bottom:10px">
+        <div class="settings-row">
           <span class="settings-label" id="signedInAs" style="font-size:14px;overflow:hidden;text-overflow:ellipsis"></span>
         </div>
-        <button type="button" class="btn btn-ghost btn-sm" style="width:100%;margin-bottom:8px" onclick="copyFirebaseRules()">Copy database rules</button>
         <button type="button" class="btn btn-danger btn-sm" style="width:100%" onclick="signOutShop()">Sign out</button>
       </div>
     </div>
     <div class="modal-actions">
-      <button type="button" class="btn btn-primary" onclick="closeSettings()">Done</button>
+      <button type="button" class="btn btn-ghost" onclick="closeSettings()">Done</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay confirm-overlay" id="confirmOverlay" onclick="if(event.target===this)closeConfirm(false)">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="modal-title" id="confirmTitle">Are you sure?</div>
+    <p class="confirm-copy" id="confirmBody"></p>
+    <div class="modal-actions" style="position:static">
+      <button type="button" class="btn btn-ghost" id="confirmCancel" onclick="closeConfirm(false)">Cancel</button>
+      <button type="button" class="btn btn-danger" id="confirmOk" onclick="closeConfirm(true)">Delete</button>
     </div>
   </div>
 </div>
@@ -517,8 +506,7 @@ try {
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
 <script>
-// Put each phone's sign-in address here, then paste the generated rules into
-// Firebase. Only these two addresses can reach the board.
+// Antonio and Anthony. Emails match the Firebase accounts that can sign in.
 const TECHS = [
   { id: 'antonio', name: 'Antonio', email: '22sonars@proton.me' },
   { id: 'anthony', name: 'Anthony', email: 'antcar1repair@gmail.com' }
@@ -527,8 +515,8 @@ const TECHS = [
 // One shared board. Both accounts land here, so there is no code to mistype.
 const BOARD_ID = 'antonio-anthony';
 
-// Public by design: this only says which project to talk to. The rules below
-// are what actually restrict access.
+// Public by design: this only says which project to talk to. Access is already
+// limited in Firebase to the two crew emails.
 const FIREBASE_CONFIG = {
   apiKey: 'AIzaSyDw3j0TFG-VJ28splI0S411AoPvcoAFSc4',
   authDomain: 'shopflow-2bad9.firebaseapp.com',
@@ -540,29 +528,6 @@ const FIREBASE_CONFIG = {
 };
 
 const SYNC_LS = 'shopflow_sync';
-
-function crewEmails() {
-  return TECHS.map(t => (t.email || '').trim().toLowerCase()).filter(Boolean);
-}
-
-// Access is pinned to the two addresses rather than "any signed-in user",
-// because anyone can self-register against a public Firebase API key.
-function firebaseRulesText() {
-  const emails = crewEmails();
-  const allow = emails.length
-    ? emails.map(e => `auth.token.email === '${e}'`).join(' || ')
-    : 'false';
-  return `{
-  "rules": {
-    "boards": {
-      "${BOARD_ID}": {
-        ".read": "auth != null && (${allow})",
-        ".write": "auth != null && (${allow})"
-      }
-    }
-  }
-}`;
-}
 
 const TRUCK_TOOLS = [
   {
@@ -639,11 +604,9 @@ function init() {
     } catch (e) {}
   }
   applyTheme(data.theme);
-  updateDate();
   renderAll();
   loadDirty();
   updateSyncUi();
-  setInterval(updateDate, 60000);
   document.addEventListener('click', () => closeHeaderMenu());
   document.getElementById('jobsList').addEventListener('click', onJobsClick);
   document.getElementById('archiveList').addEventListener('click', onArchiveClick);
@@ -944,11 +907,9 @@ function updateAuthUi() {
   const signedOut = document.getElementById('signedOutWrap');
   const signedIn = document.getElementById('signedInWrap');
   const who = document.getElementById('signedInAs');
-  const warn = document.getElementById('crewEmailWarning');
   if (signedOut) signedOut.hidden = !!user;
   if (signedIn) signedIn.hidden = !user;
   if (who && user) who.textContent = user.email || 'signed in';
-  if (warn) warn.hidden = crewEmails().length >= 2;
 }
 
 function scheduleCloudPush() {
@@ -1155,28 +1116,12 @@ async function resetPassword() {
   }
 }
 
-async function copyFirebaseRules() {
-  try {
-    await navigator.clipboard.writeText(firebaseRulesText());
-    showToast(crewEmails().length >= 2
-      ? 'Rules copied — paste in Firebase'
-      : 'Add both emails in the file first');
-  } catch (e) {
-    showToast('Copy failed — see the chat for rules');
-  }
-}
-
-function updateDate() {
-  const d = new Date();
-  const opts = { weekday: 'short', month: 'short', day: 'numeric' };
-  document.getElementById('currentDate').textContent = d.toLocaleDateString('en-US', opts);
-}
-
 function switchTab(tab) {
   currentTab = tab;
   document.querySelectorAll('.tabbar-btn').forEach(p => p.classList.toggle('active', p.dataset.tab === tab));
   document.querySelectorAll('.section').forEach(s => s.classList.toggle('active', s.id === tab + 'Section'));
-  document.getElementById('addBar').hidden = tab !== 'jobs';
+  const newJobBtn = document.getElementById('newJobBtn');
+  if (newJobBtn) newJobBtn.hidden = tab !== 'jobs';
   closeHeaderMenu();
 }
 
@@ -1193,7 +1138,7 @@ function applyTheme(theme) {
   const light = theme === 'light';
   document.documentElement.setAttribute('data-theme', light ? 'light' : 'dark');
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute('content', light ? '#f3f5fa' : '#0b0f19');
+  if (meta) meta.setAttribute('content', light ? '#f3efe6' : '#12110f');
   const bar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
   if (bar) bar.setAttribute('content', light ? 'default' : 'black-translucent');
   const toggle = document.getElementById('lightModeToggle');
@@ -1215,6 +1160,29 @@ function openSettings() {
 
 function closeSettings() {
   document.getElementById('settingsOverlay').classList.remove('active');
+}
+
+let confirmResolver = null;
+
+function askConfirm({ title, body, ok, danger }) {
+  if (confirmResolver) confirmResolver(false);
+  document.getElementById('confirmTitle').textContent = title;
+  const copy = document.getElementById('confirmBody');
+  copy.textContent = body || '';
+  copy.hidden = !body;
+  const okBtn = document.getElementById('confirmOk');
+  okBtn.textContent = ok || 'OK';
+  okBtn.className = 'btn ' + (danger ? 'btn-danger' : 'btn-primary');
+  document.getElementById('confirmOverlay').classList.add('active');
+  document.getElementById('confirmCancel').focus();
+  return new Promise(resolve => { confirmResolver = resolve; });
+}
+
+function closeConfirm(ok) {
+  document.getElementById('confirmOverlay').classList.remove('active');
+  const resolve = confirmResolver;
+  confirmResolver = null;
+  if (resolve) resolve(!!ok);
 }
 
 function techName(id) {
@@ -1274,8 +1242,7 @@ function renderJobs() {
   if (!data.jobs.length) {
     list.innerHTML = `
       <div class="empty-state">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-        <p>No jobs yet. Tap New job below.</p>
+        <p>Nothing on the board. Tap + Job.</p>
       </div>`;
     return;
   }
@@ -1305,36 +1272,36 @@ function jobCardHtml(job) {
   if (job.status === 'queued') {
     primary = `<button class="btn btn-primary" type="button" data-act="onsite">On site</button>`;
   } else if (job.status === 'onsite') {
-    primary = `<button class="btn btn-success" type="button" data-act="done">Done</button>`;
+    primary = `<button class="btn btn-primary" type="button" data-act="done">Done</button>`;
   } else {
     primary = `<button class="btn btn-primary" type="button" data-act="queued">Back on it</button>`;
   }
 
   const call = job.phone
-    ? `<a class="btn btn-ghost" href="${telHref(job.phone)}">Call</a>`
+    ? `<a href="${telHref(job.phone)}">Call</a>`
     : '';
   const maps = job.address
-    ? `<a class="btn btn-ghost" href="${mapsUrl(job.address)}" target="_blank" rel="noopener">Maps</a>`
+    ? `<a href="${mapsUrl(job.address)}" target="_blank" rel="noopener">Maps</a>`
     : '';
 
   const waitBtn = job.status !== 'waiting'
-    ? `<button class="btn btn-wait" type="button" data-act="waiting">Waiting parts</button>`
+    ? `<button class="btn btn-ghost" type="button" data-act="waiting">Waiting parts</button>`
     : '';
   const doneInDetails = job.status !== 'onsite'
-    ? `<button class="btn btn-success" type="button" data-act="done">Done</button>`
+    ? `<button class="btn btn-ghost" type="button" data-act="done">Done</button>`
     : '';
 
   return `
-    <div class="card status-${job.status}${expanded ? ' expanded' : ''}" data-id="${esc(job.id)}">
+    <div class="card${expanded ? ' expanded' : ''}" data-id="${esc(job.id)}">
       <div class="card-top">
         <div class="card-identity">${esc(identity || 'Job')}</div>
-        ${who ? `<span class="who-chip">${esc(who)}</span>` : ''}
+        ${who ? `<span class="who">${esc(who)}</span>` : ''}
       </div>
       ${job.when ? `<div class="card-when${overdue ? ' overdue' : ''}">${esc(formatWhen(job.when))}</div>` : ''}
       ${job.address ? `<div class="card-where">${esc(job.address)}</div>` : ''}
       <div class="card-job">${esc(job.desc)}</div>
-      ${job.priority === 'urgent' ? '<div class="urgent-pill">Urgent</div>' : ''}
-      ${(call || maps) ? `<div class="card-actions">${call}${maps}</div>` : ''}
+      ${job.priority === 'urgent' ? '<div class="urgent-mark">Urgent</div>' : ''}
+      ${(call || maps) ? `<div class="card-links">${call}${maps}</div>` : ''}
       <div class="card-actions">${primary}</div>
       <div class="card-details">
         ${job.notes ? `<div class="card-notes">${esc(job.notes)}</div>` : ''}
@@ -1390,7 +1357,6 @@ function renderArchive() {
   if (!data.archive.length) {
     list.innerHTML = `
       <div class="empty-state">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>
         <p>No completed jobs yet.</p>
       </div>`;
     return;
@@ -1413,7 +1379,7 @@ function renderArchive() {
       const identity = [job.customer, job.vehicle].filter(Boolean).join(' · ');
       return `
         <div class="card archive-card" data-id="${esc(job.id)}">
-          <div class="card-identity" style="font-size:16px">${esc(identity || job.desc)}</div>
+          <div class="card-identity">${esc(identity || job.desc)}</div>
           <div class="card-job" style="margin-top:6px;color:var(--text-dim)">${esc(job.desc)}</div>
           ${who ? `<div class="archive-meta">${esc(who)}</div>` : ''}
           <div class="archive-actions">
@@ -1448,7 +1414,7 @@ function renderTools() {
     return `
       <div class="tool-cat ${isCollapsed ? 'collapsed' : ''}" id="toolCat-${ci}">
         <div class="tool-cat-header" onclick="toggleToolCat(${ci})">
-          <span>${esc(cat.name)} <span style="color:var(--text-dim);font-weight:600;">${checkedCount}/${cat.tools.length}</span></span>
+          <span>${esc(cat.name)} <span style="color:var(--text-dim);font-weight:500;">${checkedCount}/${cat.tools.length}</span></span>
         </div>
         <div class="tool-cat-body">
           ${cat.tools.map((tool, ti) => {
@@ -1478,12 +1444,19 @@ function toggleTool(key) {
 }
 
 function resetTruckChecklist() {
-  if (!confirm('Reset tools checklist for a new day?')) return;
-  data.toolState = {};
-  expandedToolCats = new Set();
-  saveData({ cloud: false });
-  renderTools();
-  showToast('Checklist reset');
+  askConfirm({
+    title: 'Reset tools?',
+    body: 'Clears checkmarks for a new day.',
+    ok: 'Reset',
+    danger: false
+  }).then(ok => {
+    if (!ok) return;
+    data.toolState = {};
+    expandedToolCats = new Set();
+    saveData({ cloud: false });
+    renderTools();
+    showToast('Checklist reset');
+  });
 }
 
 function setWhenChip(kind) {
@@ -1645,15 +1618,22 @@ function restoreJob(id) {
 }
 
 function deleteJob(id, fromArchive = false) {
-  if (!confirm('Delete permanently?')) return;
-  if (fromArchive) {
-    data.archive = data.archive.filter(j => j.id !== id);
-  } else {
-    data.jobs = data.jobs.filter(j => j.id !== id);
-  }
-  saveData(fromArchive ? { archive: id } : { jobs: id });
-  renderAll();
-  showToast('Deleted');
+  askConfirm({
+    title: 'Delete this job?',
+    body: "Can't undo this.",
+    ok: 'Delete',
+    danger: true
+  }).then(ok => {
+    if (!ok) return;
+    if (fromArchive) {
+      data.archive = data.archive.filter(j => j.id !== id);
+    } else {
+      data.jobs = data.jobs.filter(j => j.id !== id);
+    }
+    saveData(fromArchive ? { archive: id } : { jobs: id });
+    renderAll();
+    showToast('Deleted');
+  });
 }
 
 function renderAll() {
