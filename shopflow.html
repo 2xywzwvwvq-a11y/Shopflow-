@@ -146,13 +146,10 @@ try {
     margin-top:12px; font-size:15px; font-weight:600; line-height:1.4; color: var(--text);
   }
   .who-chip {
-    flex-shrink:0; min-height:44px; padding: 8px 12px; border-radius: 999px;
-    border:1px solid var(--border); background: var(--surface-2);
-    color: var(--text-dim); font-size:13px; font-weight:800; cursor:pointer;
-    max-width: 42%;
-  }
-  .who-chip.assigned {
-    background: rgba(245,158,11,0.16); border-color: rgba(245,158,11,0.45); color: var(--accent);
+    flex-shrink:0; padding: 8px 12px; border-radius: 999px;
+    border:1px solid rgba(245,158,11,0.45); background: rgba(245,158,11,0.16);
+    color: var(--accent); font-size:13px; font-weight:800;
+    max-width: 42%; pointer-events: none;
   }
   .urgent-pill {
     display:inline-block; margin-top:8px;
@@ -1331,7 +1328,7 @@ function jobCardHtml(job) {
     <div class="card status-${job.status}${expanded ? ' expanded' : ''}" data-id="${esc(job.id)}">
       <div class="card-top">
         <div class="card-identity">${esc(identity || 'Job')}</div>
-        <button class="who-chip${who ? ' assigned' : ''}" type="button" data-act="assign">${esc(who || 'Who?')}</button>
+        ${who ? `<span class="who-chip">${esc(who)}</span>` : ''}
       </div>
       ${job.when ? `<div class="card-when${overdue ? ' overdue' : ''}">${esc(formatWhen(job.when))}</div>` : ''}
       ${job.address ? `<div class="card-where">${esc(job.address)}</div>` : ''}
@@ -1365,7 +1362,6 @@ function onJobsClick(e) {
   else if (act === 'done') archiveJob(id);
   else if (act === 'edit') editJob(id);
   else if (act === 'expand') toggleExpand(id);
-  else if (act === 'assign') cycleAssign(id);
 }
 
 function toggleExpand(id) {
@@ -1386,16 +1382,6 @@ function setJobStatus(id, status) {
   saveData({ jobs: id });
   renderJobs();
   showToast((job.customer || 'Job') + ': ' + (STATUS_LABELS[status] || status));
-}
-
-function cycleAssign(id) {
-  const job = data.jobs.find(j => j.id === id);
-  if (!job) return;
-  const order = ['', 'antonio', 'anthony'];
-  const i = order.indexOf(job.assignedTo || '');
-  job.assignedTo = order[(i < 0 ? 0 : i + 1) % order.length];
-  saveData({ jobs: id });
-  renderJobs();
 }
 
 function renderArchive() {
