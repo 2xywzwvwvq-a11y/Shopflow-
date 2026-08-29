@@ -9,9 +9,21 @@
   "theme_color": "#12110f",
   "icons": [
     {
-      "src": "shopflow-icon.png",
+      "src": "shopflow-apple-touch-icon.png",
       "sizes": "180x180",
       "type": "image/png"
+    },
+    {
+      "src": "shopflow-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "shopflow-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

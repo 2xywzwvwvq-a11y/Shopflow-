@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'shopflow-shell-v2';
-const RUNTIME_CACHE = 'shopflow-runtime-v2';
+const SHELL_CACHE = 'shopflow-shell-v3';
+const RUNTIME_CACHE = 'shopflow-runtime-v3';
 const KEEP = [SHELL_CACHE, RUNTIME_CACHE];
 
 const SHELL = [
@@ -7,7 +7,10 @@ const SHELL = [
   './index.html',
   './shopflow.html',
   './manifest.webmanifest',
-  './shopflow-icon.png'
+  './shopflow-icon.png',
+  './shopflow-apple-touch-icon.png',
+  './shopflow-icon-192.png',
+  './shopflow-icon-512.png'
 ];
 
 self.addEventListener('install', event => {
