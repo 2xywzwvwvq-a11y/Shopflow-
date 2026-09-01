@@ -1333,8 +1333,19 @@ function mapsUrl(address) {
   return 'https://maps.apple.com/?q=' + encodeURIComponent(address);
 }
 
+function phoneDigits(phone) {
+  return String(phone).replace(/[^\d+]/g, '');
+}
+
 function telHref(phone) {
-  return 'tel:' + String(phone).replace(/[^\d+]/g, '');
+  return 'tel:' + phoneDigits(phone);
+}
+
+function imessageHref(phone) {
+  const n = encodeURIComponent(phoneDigits(phone));
+  // iOS: sms:NUMBER alone often just launches Messages. NUMBER&body=
+  // opens a compose to that recipient (empty body so they type it).
+  return 'sms:' + n + '&body=';
 }
 
 function sortJobs(jobs) {
@@ -1397,6 +1408,9 @@ function jobCardHtml(job) {
   const call = job.phone
     ? `<a href="${telHref(job.phone)}">Call</a>`
     : '';
+  const text = job.phone
+    ? `<a href="${esc(imessageHref(job.phone))}" data-act="imessage">Text</a>`
+    : '';
   const maps = job.address
     ? `<a href="${mapsUrl(job.address)}" target="_blank" rel="noopener">Maps</a>`
     : '';
@@ -1421,7 +1435,7 @@ function jobCardHtml(job) {
       ${job.address ? `<div class="card-where">${esc(job.address)}</div>` : ''}
       <div class="card-job">${esc(job.desc)}</div>
       ${job.priority === 'urgent' ? '<div class="urgent-mark">Urgent</div>' : ''}
-      ${(call || maps) ? `<div class="card-links">${call}${maps}</div>` : ''}
+      ${(call || text || maps) ? `<div class="card-links">${call}${text}${maps}</div>` : ''}
       <div class="card-actions">${primary}</div>
       <div class="card-details">
         ${job.notes ? `<div class="card-notes">${esc(job.notes)}</div>` : ''}
@@ -1454,6 +1468,11 @@ function onJobsClick(e) {
   else if (act === 'done') archiveJob(id);
   else if (act === 'edit') editJob(id);
   else if (act === 'expand') toggleExpand(id);
+  else if (act === 'imessage') {
+    e.preventDefault();
+    const href = actEl.getAttribute('href');
+    if (href) window.location.href = href;
+  }
 }
 
 function toggleExpand(id) {
