@@ -88,12 +88,20 @@ try {
   }
   .text-btn:active { transform: scale(0.98); opacity:0.9; }
   .text-btn[hidden] { display:none !important; }
+  .text-btn-ghost {
+    background: transparent; color: var(--text); border: 1px solid var(--border);
+  }
+  .text-btn-danger {
+    background: transparent; color: var(--urgent); border: 1px solid var(--border);
+  }
+  .text-btn-danger:disabled { opacity: 0.4; }
   .icon-btn {
     background:none; border:none;
     width:44px; height:44px; border-radius:10px;
     display:flex; align-items:center; justify-content:center;
     color: var(--text-dim); cursor:pointer; font-size:20px; font-weight:600;
   }
+  .icon-btn[hidden] { display:none !important; }
   .header-menu {
     display:none; position:absolute; right:0; top:calc(100% + 6px);
     background: var(--surface); border:1px solid var(--border);
@@ -105,6 +113,7 @@ try {
     color: var(--text); font: inherit; font-weight:500; font-size:15px;
     padding: 14px 16px; cursor:pointer; min-height:44px;
   }
+  .header-menu button + button { border-top: 1px solid var(--border); }
   .header-menu button:active { background: var(--surface-2); }
   .section { display:none; padding: 16px; animation: fadeIn 0.18s ease; }
   .section.active { display:block; max-width: var(--page-w); margin: 0 auto; }
@@ -147,11 +156,19 @@ try {
     margin-top:8px; font-size:13px; font-weight:600; color: var(--urgent);
   }
   .card-links {
-    display:flex; gap:16px; margin-top:10px;
+    display:flex; align-items:center; gap:0; margin-top:10px;
   }
   .card-links a {
     color: var(--text-dim); font-size:14px; font-weight:600;
     text-decoration:none; min-height:44px; display:flex; align-items:center;
+  }
+  .card-links a + a::before {
+    content: '';
+    width: 1.5px;
+    height: 1em;
+    background: var(--border);
+    margin: 0 12px;
+    flex-shrink: 0;
   }
   .card-links a:active { color: var(--accent); }
   .card-actions { display:flex; gap:8px; margin-top:6px; }
@@ -276,9 +293,16 @@ try {
   .choice-chip.active { background: var(--accent); color:#1a1406; border-color: var(--accent); }
   .more-toggle {
     width:100%; min-height:44px; margin: 4px 0 12px;
-    background:none; border:none; color: var(--text-dim);
-    font: inherit; font-size:14px; font-weight:500; cursor:pointer; text-align:left;
+    background: transparent; border:1px solid var(--border); border-radius:10px;
+    color: var(--text); font: inherit; font-size:14px; font-weight:600;
+    cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;
   }
+  .more-toggle::after {
+    content: '›'; font-size:20px; line-height:1; color: var(--text-dim);
+    transform: rotate(90deg); transition: transform 0.15s;
+  }
+  .more-toggle.open::after { transform: rotate(-90deg); }
+  .more-toggle:active { background: var(--surface-2); }
   .form-more { display:none; }
   .form-more.open { display:block; padding-bottom: 8px; }
   .check-row {
@@ -324,7 +348,6 @@ try {
   .sync-pill.err { color: var(--urgent); }
   .settings-block { margin-top: 16px; }
   .settings-block .form-label { margin-top: 10px; }
-  .settings-help { font-size:13px; font-weight:500; color: var(--text-dim); line-height:1.45; margin: 0 0 12px; }
   .sync-status-line { font-size:13px; font-weight:500; color: var(--text-dim); margin: 0 0 12px; }
   .sync-status-line.live { color: var(--success); }
   .sync-status-line.err { color: var(--urgent); }
@@ -351,6 +374,16 @@ try {
   .archive-card .card-identity { font-size:16px; }
   .archive-meta { margin-top:6px; font-size:13px; color: var(--text-dim); font-weight:500; }
   .archive-actions { display:flex; gap:8px; margin-top:10px; }
+
+  body.selecting-jobs .card { cursor: pointer; }
+  body.selecting-jobs .card-top { align-items: center; }
+  body.selecting-jobs .card-identity { flex: 1; min-width: 0; }
+  body.selecting-jobs .card-links,
+  body.selecting-jobs .card-actions,
+  body.selecting-jobs .card-details,
+  body.selecting-jobs .details-toggle { display: none !important; }
+  .card.selected { border-color: var(--accent); }
+  .card-top .check-box { margin-top: 0; }
 </style>
 </head>
 <body>
@@ -361,8 +394,11 @@ try {
     <div class="header-right">
       <div class="sync-pill" id="syncPill" hidden>On phone</div>
       <button class="text-btn" id="newJobBtn" type="button" onclick="openModal()">+ Job</button>
-      <button class="icon-btn" type="button" onclick="toggleHeaderMenu(event)" title="More" aria-label="More">⋯</button>
+      <button class="text-btn text-btn-ghost" id="selectCancelBtn" type="button" hidden onclick="exitSelectJobs()">Cancel</button>
+      <button class="text-btn text-btn-danger" id="selectDeleteBtn" type="button" hidden disabled onclick="deleteSelectedJobs()">Delete</button>
+      <button class="icon-btn" id="moreBtn" type="button" onclick="toggleHeaderMenu(event)" title="More" aria-label="More">⋯</button>
       <div class="header-menu" id="headerMenu">
+        <button type="button" onclick="startSelectJobs()">Select job</button>
         <button type="button" onclick="openSettings()">Settings</button>
         <button type="button" onclick="shareBoard()">Share today's board</button>
       </div>
@@ -435,7 +471,6 @@ try {
       <button type="button" class="more-toggle" id="moreToggle" onclick="toggleFormMore()">More — urgent, tools, notes</button>
       <div class="form-more" id="formMore">
         <label class="check-row"><input type="checkbox" id="jobUrgent"> Mark urgent</label>
-        <label class="check-row"><input type="checkbox" id="jobOnsiteNow"> I'm already there</label>
         <div class="form-group">
           <label class="form-label" for="jobTools">Tools / parts</label>
           <input type="text" class="form-input" id="jobTools" placeholder="Torque wrench, pads, scanner...">
@@ -463,7 +498,6 @@ try {
     <div class="settings-block">
       <div class="settings-label" style="margin-bottom:8px;margin-top:8px">Share with partner</div>
       <p class="sync-status-line" id="syncStatusLine">On this phone only</p>
-      <p class="settings-help">Jobs and Done sync between your two phones. Truck tools stay on this phone. Your job list always works here, signed in or not.</p>
 
       <div id="signedOutWrap">
         <label class="form-label" for="authEmail">Email</label>
@@ -580,6 +614,8 @@ let formWho = '';
 let expandedIds = new Set();
 let expandedToolCats = new Set();
 let currentTab = 'jobs';
+let selectingJobs = false;
+const selectedJobIds = new Set();
 
 const sync = {
   status: 'off',
@@ -1117,12 +1153,12 @@ async function resetPassword() {
 }
 
 function switchTab(tab) {
+  if (selectingJobs && tab !== 'jobs') exitSelectJobs();
   currentTab = tab;
   document.querySelectorAll('.tabbar-btn').forEach(p => p.classList.toggle('active', p.dataset.tab === tab));
   document.querySelectorAll('.section').forEach(s => s.classList.toggle('active', s.id === tab + 'Section'));
-  const newJobBtn = document.getElementById('newJobBtn');
-  if (newJobBtn) newJobBtn.hidden = tab !== 'jobs';
   closeHeaderMenu();
+  updateSelectChrome();
 }
 
 function toggleHeaderMenu(e) {
@@ -1132,6 +1168,82 @@ function toggleHeaderMenu(e) {
 
 function closeHeaderMenu() {
   document.getElementById('headerMenu')?.classList.remove('open');
+}
+
+function updateSelectChrome() {
+  const on = selectingJobs;
+  document.body.classList.toggle('selecting-jobs', on);
+  const newJobBtn = document.getElementById('newJobBtn');
+  const moreBtn = document.getElementById('moreBtn');
+  const cancelBtn = document.getElementById('selectCancelBtn');
+  const deleteBtn = document.getElementById('selectDeleteBtn');
+  if (newJobBtn) newJobBtn.hidden = on || currentTab !== 'jobs';
+  if (moreBtn) moreBtn.hidden = on;
+  if (cancelBtn) cancelBtn.hidden = !on;
+  if (deleteBtn) {
+    deleteBtn.hidden = !on;
+    deleteBtn.disabled = selectedJobIds.size === 0;
+  }
+}
+
+function startSelectJobs() {
+  closeHeaderMenu();
+  if (!data.jobs.length) {
+    showToast('No jobs to select');
+    return;
+  }
+  if (currentTab !== 'jobs') {
+    currentTab = 'jobs';
+    document.querySelectorAll('.tabbar-btn').forEach(p => p.classList.toggle('active', p.dataset.tab === 'jobs'));
+    document.querySelectorAll('.section').forEach(s => s.classList.toggle('active', s.id === 'jobsSection'));
+  }
+  selectingJobs = true;
+  selectedJobIds.clear();
+  updateSelectChrome();
+  renderJobs();
+}
+
+function exitSelectJobs() {
+  if (!selectingJobs) return;
+  selectingJobs = false;
+  selectedJobIds.clear();
+  updateSelectChrome();
+  renderJobs();
+}
+
+function toggleJobSelected(id) {
+  if (selectedJobIds.has(id)) selectedJobIds.delete(id);
+  else selectedJobIds.add(id);
+  const card = document.querySelector('#jobsList .card[data-id="' + CSS.escape(id) + '"]');
+  if (card) {
+    const on = selectedJobIds.has(id);
+    card.classList.toggle('selected', on);
+    card.querySelector('.check-box')?.classList.toggle('checked', on);
+  }
+  updateSelectChrome();
+}
+
+function deleteSelectedJobs() {
+  const ids = Array.from(selectedJobIds);
+  if (!ids.length) return;
+  const n = ids.length;
+  askConfirm({
+    title: n === 1 ? 'Delete this job?' : 'Delete ' + n + ' jobs?',
+    body: "Can't undo this.",
+    ok: n === 1 ? 'Delete' : 'Delete ' + n,
+    danger: true
+  }).then(ok => {
+    if (!ok) return;
+    const idSet = new Set(ids);
+    data.jobs = data.jobs.filter(j => !idSet.has(j.id));
+    ids.forEach(id => expandedIds.delete(id));
+    selectingJobs = false;
+    selectedJobIds.clear();
+    saveData({ jobs: ids });
+    updateSelectChrome();
+    renderAll();
+    showToast(n === 1 ? 'Deleted' : n + ' jobs deleted');
+  });
 }
 
 function applyTheme(theme) {
@@ -1240,6 +1352,11 @@ function renderJobs() {
   const list = document.getElementById('jobsList');
 
   if (!data.jobs.length) {
+    if (selectingJobs) {
+      selectingJobs = false;
+      selectedJobIds.clear();
+      updateSelectChrome();
+    }
     list.innerHTML = `
       <div class="empty-state">
         <p>Nothing on the board. Tap + Job.</p>
@@ -1291,9 +1408,12 @@ function jobCardHtml(job) {
     ? `<button class="btn btn-ghost" type="button" data-act="done">Done</button>`
     : '';
 
+  const selected = selectingJobs && selectedJobIds.has(job.id);
+
   return `
-    <div class="card${expanded ? ' expanded' : ''}" data-id="${esc(job.id)}">
+    <div class="card${expanded ? ' expanded' : ''}${selected ? ' selected' : ''}" data-id="${esc(job.id)}">
       <div class="card-top">
+        ${selectingJobs ? `<span class="check-box${selected ? ' checked' : ''}"></span>` : ''}
         <div class="card-identity">${esc(identity || 'Job')}</div>
         ${who ? `<span class="who">${esc(who)}</span>` : ''}
       </div>
@@ -1317,11 +1437,16 @@ function jobCardHtml(job) {
 }
 
 function onJobsClick(e) {
-  const actEl = e.target.closest('[data-act]');
-  if (!actEl) return;
-  const card = actEl.closest('.card');
+  const card = e.target.closest('.card');
   if (!card) return;
   const id = card.dataset.id;
+  if (selectingJobs) {
+    e.preventDefault();
+    toggleJobSelected(id);
+    return;
+  }
+  const actEl = e.target.closest('[data-act]');
+  if (!actEl) return;
   const act = actEl.dataset.act;
   if (act === 'onsite') setJobStatus(id, 'onsite');
   else if (act === 'waiting') setJobStatus(id, 'waiting');
@@ -1501,7 +1626,9 @@ function toggleFormMore(force) {
   const box = document.getElementById('formMore');
   const open = force === true ? true : force === false ? false : !box.classList.contains('open');
   box.classList.toggle('open', open);
-  document.getElementById('moreToggle').textContent = open ? 'Less details' : 'More — urgent, tools, notes';
+  const toggle = document.getElementById('moreToggle');
+  toggle.classList.toggle('open', open);
+  toggle.textContent = open ? 'Less details' : 'More — urgent, tools, notes';
 }
 
 function openModal(editId = null) {
@@ -1527,7 +1654,6 @@ function openModal(editId = null) {
     document.getElementById('jobTools').value = job.tools || '';
     document.getElementById('jobNotes').value = job.notes || '';
     document.getElementById('jobUrgent').checked = job.priority === 'urgent';
-    document.getElementById('jobOnsiteNow').checked = job.status === 'onsite';
     formWho = job.assignedTo || '';
     document.querySelectorAll('#whoChips .choice-chip').forEach(c => {
       c.classList.toggle('active', c.dataset.who === formWho);
@@ -1536,7 +1662,7 @@ function openModal(editId = null) {
       document.getElementById('jobWhen').hidden = false;
       document.querySelector('#whenChips [data-when="pick"]')?.classList.add('active');
     }
-    if (job.tools || job.notes || job.priority === 'urgent' || job.status === 'onsite') {
+    if (job.tools || job.notes || job.priority === 'urgent') {
       toggleFormMore(true);
     }
   }
@@ -1554,8 +1680,7 @@ function saveJob(e) {
   if (document.getElementById('jobUrgent').checked) priority = 'urgent';
   else if (existing?.priority === 'urgent') priority = 'normal';
 
-  let status = existing?.status || 'queued';
-  if (document.getElementById('jobOnsiteNow').checked) status = 'onsite';
+  const status = existing?.status || 'queued';
 
   const job = normalizeJob({
     id: editingId || newJobId(),
