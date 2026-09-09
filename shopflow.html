@@ -139,7 +139,7 @@ try {
   .card-identity { font-size:17px; font-weight:600; line-height:1.25; letter-spacing:-0.02em; }
   .who {
     flex-shrink:0; color: var(--text-dim); font-size:13px; font-weight:500;
-    padding-top: 2px; max-width: 42%;
+    padding-top: 2px; max-width: 50%; text-align: right; line-height: 1.25;
   }
   .card-when {
     margin-top:6px; font-size:15px; font-weight:500; color: var(--text);
@@ -610,7 +610,7 @@ let data = {
 };
 
 let editingId = null;
-let formWho = '';
+let formWho = [];
 let expandedIds = new Set();
 let expandedToolCats = new Set();
 let currentTab = 'jobs';
@@ -698,15 +698,35 @@ function newJobId() {
   return 'j' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
+function parseAssigned(value) {
+  let raw = [];
+  if (Array.isArray(value)) raw = value;
+  else if (value && typeof value === 'object') raw = Object.values(value);
+  else {
+    const s = String(value || '').trim();
+    if (!s) return [];
+    if (s === 'both') raw = TECHS.map(t => t.id);
+    else raw = s.split(/[,\s]+/);
+  }
+  const aliases = { m1: 'antonio', m2: 'anthony' };
+  const wanted = new Set();
+  raw.forEach(v => {
+    const id = aliases[v] || String(v).trim();
+    if (TECHS.some(t => t.id === id)) wanted.add(id);
+  });
+  return TECHS.map(t => t.id).filter(id => wanted.has(id));
+}
+
+function serializeAssigned(value) {
+  return parseAssigned(value).join(',');
+}
+
+function whoLabel(value) {
+  return parseAssigned(value).map(id => techName(id)).filter(Boolean).join(' + ');
+}
+
 function normalizeJob(job) {
   const status = ['queued', 'onsite', 'waiting'].includes(job.status) ? job.status : 'queued';
-  let assignedTo = job.assignedTo || '';
-  if (assignedTo && !TECHS.some(t => t.id === assignedTo)) {
-    const old = String(assignedTo);
-    if (old === 'm1') assignedTo = 'antonio';
-    else if (old === 'm2') assignedTo = 'anthony';
-    else assignedTo = '';
-  }
   return {
     id: job.id || newJobId(),
     customer: job.customer || '',
@@ -716,7 +736,7 @@ function normalizeJob(job) {
     when: job.when || '',
     desc: job.desc || '',
     priority: ['urgent', 'warning', 'normal'].includes(job.priority) ? job.priority : 'normal',
-    assignedTo,
+    assignedTo: serializeAssigned(job.assignedTo),
     status,
     tools: job.tools || '',
     notes: job.notes || '',
@@ -1391,7 +1411,7 @@ function renderJobs() {
 }
 
 function jobCardHtml(job) {
-  const who = techName(job.assignedTo);
+  const who = whoLabel(job.assignedTo);
   const tools = job.tools ? job.tools.split(',').map(t => t.trim()).filter(Boolean) : [];
   const identity = [job.customer, job.vehicle].filter(Boolean).join(' · ');
   const expanded = expandedIds.has(job.id);
@@ -1519,7 +1539,7 @@ function renderArchive() {
 
   list.innerHTML = groups.map(g => {
     return `<div class="archive-day">${esc(g.label)}</div>` + g.jobs.map(job => {
-      const who = techName(job.assignedTo);
+      const who = whoLabel(job.assignedTo);
       const identity = [job.customer, job.vehicle].filter(Boolean).join(' · ');
       return `
         <div class="card archive-card" data-id="${esc(job.id)}">
@@ -1634,11 +1654,18 @@ function setWhenChip(kind) {
   input.value = toLocalInput(d);
 }
 
-function setFormWho(who) {
-  formWho = formWho === who ? '' : who;
+function paintFormWho() {
   document.querySelectorAll('#whoChips .choice-chip').forEach(c => {
-    c.classList.toggle('active', c.dataset.who === formWho);
+    c.classList.toggle('active', formWho.includes(c.dataset.who));
   });
+}
+
+function setFormWho(who) {
+  const next = new Set(formWho);
+  if (next.has(who)) next.delete(who);
+  else next.add(who);
+  formWho = TECHS.map(t => t.id).filter(id => next.has(id));
+  paintFormWho();
 }
 
 function toggleFormMore(force) {
@@ -1655,8 +1682,8 @@ function openModal(editId = null) {
   document.getElementById('modalTitle').textContent = editId ? 'Edit Job' : 'New Job';
   document.getElementById('modalOverlay').classList.add('active');
   document.getElementById('jobForm').reset();
-  formWho = '';
-  document.querySelectorAll('#whoChips .choice-chip').forEach(c => c.classList.remove('active'));
+  formWho = [];
+  paintFormWho();
   document.querySelectorAll('#whenChips .choice-chip').forEach(c => c.classList.remove('active'));
   document.getElementById('jobWhen').hidden = true;
   toggleFormMore(false);
@@ -1673,10 +1700,8 @@ function openModal(editId = null) {
     document.getElementById('jobTools').value = job.tools || '';
     document.getElementById('jobNotes').value = job.notes || '';
     document.getElementById('jobUrgent').checked = job.priority === 'urgent';
-    formWho = job.assignedTo || '';
-    document.querySelectorAll('#whoChips .choice-chip').forEach(c => {
-      c.classList.toggle('active', c.dataset.who === formWho);
-    });
+    formWho = parseAssigned(job.assignedTo);
+    paintFormWho();
     if (job.when) {
       document.getElementById('jobWhen').hidden = false;
       document.querySelector('#whenChips [data-when="pick"]')?.classList.add('active');
@@ -1710,7 +1735,7 @@ function saveJob(e) {
     when: document.getElementById('jobWhen').value,
     desc: document.getElementById('jobDesc').value.trim(),
     priority,
-    assignedTo: formWho,
+    assignedTo: serializeAssigned(formWho),
     status,
     tools: document.getElementById('jobTools').value.trim(),
     notes: document.getElementById('jobNotes').value.trim(),
@@ -1833,7 +1858,7 @@ async function shareBoard() {
 }
 
 function formatShareJob(j) {
-  const who = techName(j.assignedTo);
+  const who = whoLabel(j.assignedTo);
   const bits = [
     j.customer,
     j.desc,
