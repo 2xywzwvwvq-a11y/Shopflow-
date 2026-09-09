@@ -174,6 +174,10 @@ try {
   .card-actions { display:flex; gap:8px; margin-top:6px; }
   .card-details { display:none; margin-top:12px; padding-top:12px; border-top:1px solid var(--border); }
   .card.expanded .card-details { display:block; }
+  .card-price {
+    font-size:16px; font-weight:600; letter-spacing:-0.02em;
+    margin-bottom:10px;
+  }
   .card-notes {
     padding:12px; border-radius:8px;
     background: var(--surface-2);
@@ -468,6 +472,10 @@ try {
           <button type="button" class="choice-chip" data-who="anthony" onclick="setFormWho('anthony')">Anthony</button>
         </div>
       </div>
+      <div class="form-group">
+        <label class="form-label" for="jobPrice">Price</label>
+        <input type="text" class="form-input" id="jobPrice" placeholder="$180" inputmode="decimal" autocomplete="off">
+      </div>
       <button type="button" class="more-toggle" id="moreToggle" onclick="toggleFormMore()">More — urgent, tools, notes</button>
       <div class="form-more" id="formMore">
         <label class="check-row"><input type="checkbox" id="jobUrgent"> Mark urgent</label>
@@ -725,6 +733,25 @@ function whoLabel(value) {
   return parseAssigned(value).map(id => techName(id)).filter(Boolean).join(' + ');
 }
 
+function parsePrice(value) {
+  if (value == null || value === '') return null;
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value) || value < 0) return null;
+    return Math.round(value * 100) / 100;
+  }
+  const s = String(value).replace(/[$,\s]/g, '').trim();
+  if (!s) return null;
+  const n = Number(s);
+  if (!Number.isFinite(n) || n < 0) return null;
+  return Math.round(n * 100) / 100;
+}
+
+function formatPrice(value) {
+  const n = parsePrice(value);
+  if (n == null) return '';
+  return n % 1 === 0 ? '$' + n : '$' + n.toFixed(2);
+}
+
 function normalizeJob(job) {
   const status = ['queued', 'onsite', 'waiting'].includes(job.status) ? job.status : 'queued';
   return {
@@ -740,6 +767,7 @@ function normalizeJob(job) {
     status,
     tools: job.tools || '',
     notes: job.notes || '',
+    price: parsePrice(job.price),
     createdAt: job.createdAt || Date.now(),
     completedAt: job.completedAt || null
   };
@@ -865,6 +893,7 @@ function jobForCloud(job) {
     status: job.status || 'queued',
     tools: job.tools || '',
     notes: job.notes || '',
+    price: parsePrice(job.price),
     createdAt: job.createdAt || Date.now(),
     completedAt: job.completedAt || null
   };
@@ -1416,6 +1445,7 @@ function jobCardHtml(job) {
   const identity = [job.customer, job.vehicle].filter(Boolean).join(' · ');
   const expanded = expandedIds.has(job.id);
   const overdue = isOverdue(job);
+  const price = formatPrice(job.price);
   let primary;
   if (job.status === 'queued') {
     primary = `<button class="btn btn-primary" type="button" data-act="onsite">On site</button>`;
@@ -1458,6 +1488,7 @@ function jobCardHtml(job) {
       ${(call || text || maps) ? `<div class="card-links">${call}${text}${maps}</div>` : ''}
       <div class="card-actions">${primary}</div>
       <div class="card-details">
+        ${price ? `<div class="card-price">${esc(price)}</div>` : ''}
         ${job.notes ? `<div class="card-notes">${esc(job.notes)}</div>` : ''}
         ${tools.length ? `<div class="card-tools">${tools.map(t => `<span class="tool-tag">${esc(t)}</span>`).join('')}</div>` : ''}
         <div class="details-actions">
@@ -1541,11 +1572,13 @@ function renderArchive() {
     return `<div class="archive-day">${esc(g.label)}</div>` + g.jobs.map(job => {
       const who = whoLabel(job.assignedTo);
       const identity = [job.customer, job.vehicle].filter(Boolean).join(' · ');
+      const price = formatPrice(job.price);
+      const meta = [who, price].filter(Boolean).join(' · ');
       return `
         <div class="card archive-card" data-id="${esc(job.id)}">
           <div class="card-identity">${esc(identity || job.desc)}</div>
           <div class="card-job" style="margin-top:6px;color:var(--text-dim)">${esc(job.desc)}</div>
-          ${who ? `<div class="archive-meta">${esc(who)}</div>` : ''}
+          ${meta ? `<div class="archive-meta">${esc(meta)}</div>` : ''}
           <div class="archive-actions">
             <button class="btn btn-ghost btn-sm" type="button" data-act="restore">Restore</button>
             <button class="btn btn-danger btn-sm" type="button" data-act="delete">Delete</button>
@@ -1699,6 +1732,7 @@ function openModal(editId = null) {
     document.getElementById('jobDesc').value = job.desc;
     document.getElementById('jobTools').value = job.tools || '';
     document.getElementById('jobNotes').value = job.notes || '';
+    document.getElementById('jobPrice').value = formatPrice(job.price);
     document.getElementById('jobUrgent').checked = job.priority === 'urgent';
     formWho = parseAssigned(job.assignedTo);
     paintFormWho();
@@ -1739,6 +1773,7 @@ function saveJob(e) {
     status,
     tools: document.getElementById('jobTools').value.trim(),
     notes: document.getElementById('jobNotes').value.trim(),
+    price: document.getElementById('jobPrice').value,
     createdAt: existing?.createdAt || Date.now()
   });
 
@@ -1865,7 +1900,8 @@ function formatShareJob(j) {
     j.vehicle,
     j.address,
     j.when ? formatWhen(j.when) : '',
-    who
+    who,
+    formatPrice(j.price)
   ].filter(Boolean);
   return `• ${bits.join(' — ')}`;
 }
