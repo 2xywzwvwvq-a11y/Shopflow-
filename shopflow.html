@@ -29,6 +29,7 @@ try {
     --accent: #e3a31a;
     --urgent: #c85a4a;
     --success: #6f8f6a;
+    --cash: #4ade80;
     --radius: 10px;
     --header-bg: rgba(18, 17, 15, 0.94);
     --tabbar-bg: rgba(18, 17, 15, 0.96);
@@ -49,6 +50,7 @@ try {
     --header-bg: rgba(243, 239, 230, 0.94);
     --tabbar-bg: rgba(251, 248, 242, 0.96);
     --overlay: rgba(28, 26, 22, 0.4);
+    --cash: #16a34a;
     color-scheme: light;
   }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -130,17 +132,24 @@ try {
 
   .card {
     background: var(--surface); border:1px solid var(--border);
-    border-radius: var(--radius); padding: 16px 16px 10px; margin-bottom: 10px;
-    position:relative;
+    border-radius: var(--radius); padding: 18px 16px; margin-bottom: 10px;
+    position:relative; cursor:pointer;
   }
   .card-top {
     display:flex; justify-content:space-between; align-items:flex-start; gap:12px;
   }
-  .card-identity { font-size:17px; font-weight:600; line-height:1.25; letter-spacing:-0.02em; }
-  .who {
-    flex-shrink:0; color: var(--text-dim); font-size:13px; font-weight:500;
-    padding-top: 2px; max-width: 50%; text-align: right; line-height: 1.25;
+  .card-identity { font-size:17px; font-weight:600; line-height:1.25; letter-spacing:-0.02em; flex:1; min-width:0; }
+  .card-price {
+    flex-shrink:0; font-size:17px; font-weight:600; line-height:1.25;
+    letter-spacing:-0.02em; color: var(--cash);
+    font-variant-numeric: tabular-nums;
   }
+  .card-sub {
+    margin-top:8px; display:flex; align-items:baseline; gap:12px;
+    font-size:15px; font-weight:500;
+  }
+  .card-sub .card-when { margin-top:0; min-width:0; }
+  .card-sub .who { color: var(--text-dim); font-size:15px; font-weight:500; margin-left:auto; text-align:right; }
   .card-when {
     margin-top:6px; font-size:15px; font-weight:500; color: var(--text);
   }
@@ -171,31 +180,21 @@ try {
     flex-shrink: 0;
   }
   .card-links a:active { color: var(--accent); }
-  .card-actions { display:flex; gap:8px; margin-top:6px; }
-  .card-details { display:none; margin-top:12px; padding-top:12px; border-top:1px solid var(--border); }
-  .card.expanded .card-details { display:block; }
-  .card-price {
-    font-size:16px; font-weight:600; letter-spacing:-0.02em;
-    margin-bottom:10px;
-  }
   .card-notes {
     padding:12px; border-radius:8px;
     background: var(--surface-2);
-    font-size:14px; color: var(--text-dim); line-height:1.45; margin-bottom:10px;
+    font-size:14px; color: var(--text-dim); line-height:1.45; margin:12px 0 10px;
   }
   .card-tools { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
   .tool-tag {
     background: var(--surface-2);
     padding:5px 9px; border-radius:6px; font-size:12px; color: var(--text-dim); font-weight:500;
   }
-  .details-actions { display:flex; gap:8px; flex-wrap:wrap; }
-  .details-actions .btn { flex:1 1 40%; }
-  .details-toggle {
-    width:auto; margin-top:2px; min-height:40px; padding:0;
-    background:none; border:none; color: var(--text-dim);
-    font: inherit; font-size:13px; font-weight:500; cursor:pointer;
-  }
-  .card.expanded .details-toggle { color: var(--text); }
+  .job-report .card-when { margin-top:0; }
+  .job-report .card-job { margin-top:12px; }
+  .job-report-actions { display:flex; flex-direction:column; gap:8px; margin-top:8px; }
+  .job-report-actions .btn-row { display:flex; gap:8px; flex-wrap:wrap; }
+  .job-report-actions .btn-row .btn { flex:1 1 40%; }
 
   .btn {
     flex:1; min-height:46px; padding:12px 14px; border-radius:10px; border:none;
@@ -268,6 +267,8 @@ try {
     display:none; align-items:flex-end; justify-content:center;
   }
   .modal-overlay.active { display:flex; }
+  #reportOverlay { background: rgba(0, 0, 0, 0.88); }
+  [data-theme="light"] #reportOverlay { background: rgba(28, 26, 22, 0.82); }
   .modal {
     background: var(--surface); width:100%; max-width:500px;
     border-radius: 14px 14px 0 0;
@@ -277,6 +278,10 @@ try {
   }
   @keyframes slideUp { from { transform:translateY(100%);} to { transform:translateY(0);} }
   .modal-title { font-size:20px; font-weight:600; letter-spacing:-0.02em; margin-bottom:16px; }
+  .report-title {
+    display:flex; justify-content:space-between; align-items:flex-start; gap:12px;
+  }
+  .report-title > span:first-child { min-width:0; }
   .form-group { margin-bottom:14px; }
   .form-label { display:block; font-size:12px; font-weight:500; color:var(--text-dim); margin-bottom:6px; }
   .form-input, .form-select, .form-textarea {
@@ -286,6 +291,15 @@ try {
     outline:none;
   }
   .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+  .form-select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 40px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='%239a958a' d='M1.2 1.4L6 6.2l4.8-4.8 1.2 1.2L6 8.6 0 2.6z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 12px 8px;
+  }
   .form-textarea { min-height:88px; resize:vertical; }
   .form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .chip-row { display:flex; flex-wrap:wrap; gap:8px; }
@@ -374,18 +388,14 @@ try {
   }
   .toggle:checked { background: var(--accent); }
   .toggle:checked::after { transform: translateX(20px); }
-  .archive-card { padding: 14px 16px 10px; }
+  .archive-card { padding: 18px 16px; }
   .archive-card .card-identity { font-size:16px; }
+  .archive-card .card-price { font-size:16px; }
   .archive-meta { margin-top:6px; font-size:13px; color: var(--text-dim); font-weight:500; }
   .archive-actions { display:flex; gap:8px; margin-top:10px; }
 
-  body.selecting-jobs .card { cursor: pointer; }
   body.selecting-jobs .card-top { align-items: center; }
   body.selecting-jobs .card-identity { flex: 1; min-width: 0; }
-  body.selecting-jobs .card-links,
-  body.selecting-jobs .card-actions,
-  body.selecting-jobs .card-details,
-  body.selecting-jobs .details-toggle { display: none !important; }
   .card.selected { border-color: var(--accent); }
   .card-top .check-box { margin-top: 0; }
 </style>
@@ -456,14 +466,8 @@ try {
         <input type="text" class="form-input" id="jobAddress" placeholder="123 Main St" autocomplete="street-address">
       </div>
       <div class="form-group">
-        <label class="form-label">When</label>
-        <div class="chip-row" id="whenChips">
-          <button type="button" class="choice-chip" data-when="now" onclick="setWhenChip('now')">Now</button>
-          <button type="button" class="choice-chip" data-when="later" onclick="setWhenChip('later')">Later today</button>
-          <button type="button" class="choice-chip" data-when="tomorrow" onclick="setWhenChip('tomorrow')">Tomorrow</button>
-          <button type="button" class="choice-chip" data-when="pick" onclick="setWhenChip('pick')">Pick time</button>
-        </div>
-        <input type="datetime-local" class="form-input" id="jobWhen" hidden style="margin-top:8px">
+        <label class="form-label" for="jobWhen">When</label>
+        <input type="datetime-local" class="form-input" id="jobWhen">
       </div>
       <div class="form-group">
         <label class="form-label">Who's going</label>
@@ -474,7 +478,7 @@ try {
       </div>
       <div class="form-group">
         <label class="form-label" for="jobPrice">Price</label>
-        <input type="text" class="form-input" id="jobPrice" placeholder="$180" inputmode="decimal" autocomplete="off">
+        <select class="form-select" id="jobPrice"></select>
       </div>
       <button type="button" class="more-toggle" id="moreToggle" onclick="toggleFormMore()">More — urgent, tools, notes</button>
       <div class="form-more" id="formMore">
@@ -493,6 +497,12 @@ try {
         <button type="submit" class="btn btn-primary">Save Job</button>
       </div>
     </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="reportOverlay" onclick="if(event.target===this)closeJobReport()">
+  <div class="modal job-report" role="dialog" aria-modal="true" aria-labelledby="reportTitle">
+    <div id="jobReport"></div>
   </div>
 </div>
 
@@ -619,7 +629,8 @@ let data = {
 
 let editingId = null;
 let formWho = [];
-let expandedIds = new Set();
+let reportJobId = null;
+let reportFromArchive = false;
 let expandedToolCats = new Set();
 let currentTab = 'jobs';
 let selectingJobs = false;
@@ -654,6 +665,7 @@ function init() {
   document.addEventListener('click', () => closeHeaderMenu());
   document.getElementById('jobsList').addEventListener('click', onJobsClick);
   document.getElementById('archiveList').addEventListener('click', onArchiveClick);
+  document.getElementById('jobReport').addEventListener('click', onReportClick);
   watchAuth();
 }
 
@@ -750,6 +762,26 @@ function formatPrice(value) {
   const n = parsePrice(value);
   if (n == null) return '';
   return n % 1 === 0 ? '$' + n : '$' + n.toFixed(2);
+}
+
+function priceLadder() {
+  const amounts = [];
+  for (let n = 10; n <= 5000; n += 10) amounts.push(n);
+  return amounts;
+}
+
+function paintPriceSelect(selected) {
+  const sel = document.getElementById('jobPrice');
+  const wanted = parsePrice(selected);
+  const amounts = priceLadder();
+  if (wanted != null && !amounts.some(n => n === wanted)) {
+    amounts.push(wanted);
+    amounts.sort((a, b) => a - b);
+  }
+  sel.innerHTML = '<option value="">—</option>' + amounts.map(n =>
+    '<option value="' + n + '">' + formatPrice(n) + '</option>'
+  ).join('');
+  sel.value = wanted == null ? '' : String(wanted);
 }
 
 function normalizeJob(job) {
@@ -1207,6 +1239,7 @@ function switchTab(tab) {
   document.querySelectorAll('.tabbar-btn').forEach(p => p.classList.toggle('active', p.dataset.tab === tab));
   document.querySelectorAll('.section').forEach(s => s.classList.toggle('active', s.id === tab + 'Section'));
   closeHeaderMenu();
+  closeJobReport();
   updateSelectChrome();
 }
 
@@ -1237,6 +1270,7 @@ function updateSelectChrome() {
 
 function startSelectJobs() {
   closeHeaderMenu();
+  closeJobReport();
   if (!data.jobs.length) {
     showToast('No jobs to select');
     return;
@@ -1285,7 +1319,6 @@ function deleteSelectedJobs() {
     if (!ok) return;
     const idSet = new Set(ids);
     data.jobs = data.jobs.filter(j => !idSet.has(j.id));
-    ids.forEach(id => expandedIds.delete(id));
     selectingJobs = false;
     selectedJobIds.clear();
     saveData({ jobs: ids });
@@ -1348,11 +1381,6 @@ function closeConfirm(ok) {
 
 function techName(id) {
   return TECHS.find(t => t.id === id)?.name || '';
-}
-
-function toLocalInput(d) {
-  const pad = n => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 function formatWhen(when) {
@@ -1439,65 +1467,38 @@ function renderJobs() {
   }).join('');
 }
 
-function jobCardHtml(job) {
-  const who = whoLabel(job.assignedTo);
-  const tools = job.tools ? job.tools.split(',').map(t => t.trim()).filter(Boolean) : [];
-  const identity = [job.customer, job.vehicle].filter(Boolean).join(' · ');
-  const expanded = expandedIds.has(job.id);
-  const overdue = isOverdue(job);
+function jobIdentity(job) {
+  return [job.customer, job.vehicle].filter(Boolean).join(' · ');
+}
+
+function cardPriceHtml(job) {
   const price = formatPrice(job.price);
-  let primary;
-  if (job.status === 'queued') {
-    primary = `<button class="btn btn-primary" type="button" data-act="onsite">On site</button>`;
-  } else if (job.status === 'onsite') {
-    primary = `<button class="btn btn-primary" type="button" data-act="done">Done</button>`;
-  } else {
-    primary = `<button class="btn btn-primary" type="button" data-act="queued">Back on it</button>`;
-  }
+  return price ? `<span class="card-price">${esc(price)}</span>` : '';
+}
 
-  const call = job.phone
-    ? `<a href="${telHref(job.phone)}">Call</a>`
-    : '';
-  const text = job.phone
-    ? `<a href="${esc(imessageHref(job.phone))}" data-act="imessage">Text</a>`
-    : '';
-  const maps = job.address
-    ? `<a href="${mapsUrl(job.address)}" target="_blank" rel="noopener">Maps</a>`
-    : '';
+function cardSubHtml(job, overdue) {
+  const who = whoLabel(job.assignedTo);
+  const when = job.when ? formatWhen(job.when) : '';
+  if (!when && !who) return '';
+  return `<div class="card-sub">
+      ${when ? `<span class="card-when${overdue ? ' overdue' : ''}">${esc(when)}</span>` : ''}
+      ${who ? `<span class="who">${esc(who)}</span>` : ''}
+    </div>`;
+}
 
-  const waitBtn = job.status !== 'waiting'
-    ? `<button class="btn btn-ghost" type="button" data-act="waiting">Waiting parts</button>`
-    : '';
-  const doneInDetails = job.status !== 'onsite'
-    ? `<button class="btn btn-ghost" type="button" data-act="done">Done</button>`
-    : '';
-
+function jobCardHtml(job) {
+  const identity = jobIdentity(job);
+  const overdue = isOverdue(job);
   const selected = selectingJobs && selectedJobIds.has(job.id);
 
   return `
-    <div class="card${expanded ? ' expanded' : ''}${selected ? ' selected' : ''}" data-id="${esc(job.id)}">
+    <div class="card${selected ? ' selected' : ''}" data-id="${esc(job.id)}">
       <div class="card-top">
         ${selectingJobs ? `<span class="check-box${selected ? ' checked' : ''}"></span>` : ''}
-        <div class="card-identity">${esc(identity || 'Job')}</div>
-        ${who ? `<span class="who">${esc(who)}</span>` : ''}
+        <div class="card-identity">${esc(identity || job.desc || 'Job')}</div>
+        ${cardPriceHtml(job)}
       </div>
-      ${job.when ? `<div class="card-when${overdue ? ' overdue' : ''}">${esc(formatWhen(job.when))}</div>` : ''}
-      ${job.address ? `<div class="card-where">${esc(job.address)}</div>` : ''}
-      <div class="card-job">${esc(job.desc)}</div>
-      ${job.priority === 'urgent' ? '<div class="urgent-mark">Urgent</div>' : ''}
-      ${(call || text || maps) ? `<div class="card-links">${call}${text}${maps}</div>` : ''}
-      <div class="card-actions">${primary}</div>
-      <div class="card-details">
-        ${price ? `<div class="card-price">${esc(price)}</div>` : ''}
-        ${job.notes ? `<div class="card-notes">${esc(job.notes)}</div>` : ''}
-        ${tools.length ? `<div class="card-tools">${tools.map(t => `<span class="tool-tag">${esc(t)}</span>`).join('')}</div>` : ''}
-        <div class="details-actions">
-          ${waitBtn}
-          ${doneInDetails}
-          <button class="btn btn-ghost" type="button" data-act="edit">Edit</button>
-        </div>
-      </div>
-      <button class="details-toggle" type="button" data-act="expand">${expanded ? 'Hide details' : 'Details'}</button>
+      ${cardSubHtml(job, overdue)}
     </div>`;
 }
 
@@ -1510,31 +1511,104 @@ function onJobsClick(e) {
     toggleJobSelected(id);
     return;
   }
+  openJobReport(id, false);
+}
+
+function jobReportHtml(job, fromArchive) {
+  const identity = jobIdentity(job);
+  const overdue = !fromArchive && isOverdue(job);
+  const tools = job.tools ? job.tools.split(',').map(t => t.trim()).filter(Boolean) : [];
+  const call = job.phone ? `<a href="${telHref(job.phone)}">Call</a>` : '';
+  const text = job.phone
+    ? `<a href="${esc(imessageHref(job.phone))}" data-act="imessage">Text</a>`
+    : '';
+  const maps = job.address
+    ? `<a href="${mapsUrl(job.address)}" target="_blank" rel="noopener">Maps</a>`
+    : '';
+
+  let primary = '';
+  let extra = '';
+  if (fromArchive) {
+    extra = `<button class="btn btn-danger" type="button" data-act="delete">Delete</button>`;
+    primary = `<button class="btn btn-primary" type="button" data-act="restore">Restore</button>`;
+  } else {
+    if (job.status === 'queued') {
+      primary = `<button class="btn btn-primary" type="button" data-act="onsite">On site</button>`;
+    } else if (job.status === 'onsite') {
+      primary = `<button class="btn btn-primary" type="button" data-act="done">Done</button>`;
+    } else {
+      primary = `<button class="btn btn-primary" type="button" data-act="queued">Back on it</button>`;
+    }
+    const waitBtn = job.status !== 'waiting'
+      ? `<button class="btn btn-ghost" type="button" data-act="waiting">Waiting parts</button>`
+      : '';
+    const extraDone = job.status !== 'onsite'
+      ? `<button class="btn btn-ghost" type="button" data-act="done">Done</button>`
+      : '';
+    extra = `${waitBtn}${extraDone}<button class="btn btn-ghost" type="button" data-act="edit">Edit</button>`;
+  }
+
+  return `
+    <div class="modal-title report-title" id="reportTitle">
+      <span>${esc(identity || job.desc || 'Job')}</span>
+      ${cardPriceHtml(job)}
+    </div>
+    ${job.when ? `<div class="card-when${overdue ? ' overdue' : ''}">${esc(formatWhen(job.when))}</div>` : ''}
+    ${job.address ? `<div class="card-where">${esc(job.address)}</div>` : ''}
+    ${job.desc ? `<div class="card-job">${esc(job.desc)}</div>` : ''}
+    ${job.priority === 'urgent' ? '<div class="urgent-mark">Urgent</div>' : ''}
+    ${job.notes ? `<div class="card-notes">${esc(job.notes)}</div>` : ''}
+    ${tools.length ? `<div class="card-tools">${tools.map(t => `<span class="tool-tag">${esc(t)}</span>`).join('')}</div>` : ''}
+    ${(call || text || maps) ? `<div class="card-links">${call}${text}${maps}</div>` : ''}
+    ${extra ? `<div class="job-report-actions"><div class="btn-row">${extra}</div></div>` : ''}
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" data-act="close">Close</button>
+      ${primary}
+    </div>`;
+}
+
+function openJobReport(id, fromArchive) {
+  reportJobId = id;
+  reportFromArchive = !!fromArchive;
+  paintJobReport();
+  document.getElementById('reportOverlay').classList.add('active');
+}
+
+function closeJobReport() {
+  document.getElementById('reportOverlay').classList.remove('active');
+  reportJobId = null;
+  reportFromArchive = false;
+}
+
+function paintJobReport() {
+  if (!reportJobId) return;
+  const list = reportFromArchive ? data.archive : data.jobs;
+  const job = list.find(j => j.id === reportJobId);
+  if (!job) {
+    closeJobReport();
+    return;
+  }
+  document.getElementById('jobReport').innerHTML = jobReportHtml(job, reportFromArchive);
+}
+
+function onReportClick(e) {
   const actEl = e.target.closest('[data-act]');
-  if (!actEl) return;
+  if (!actEl || !reportJobId) return;
+  const id = reportJobId;
   const act = actEl.dataset.act;
-  if (act === 'onsite') setJobStatus(id, 'onsite');
+  if (act === 'close') closeJobReport();
+  else if (act === 'onsite') setJobStatus(id, 'onsite');
   else if (act === 'waiting') setJobStatus(id, 'waiting');
   else if (act === 'queued') setJobStatus(id, 'queued');
   else if (act === 'done') archiveJob(id);
   else if (act === 'edit') editJob(id);
-  else if (act === 'expand') toggleExpand(id);
+  else if (act === 'restore') restoreJob(id);
+  else if (act === 'delete') deleteJob(id, true);
   else if (act === 'imessage') {
     e.preventDefault();
     const href = actEl.getAttribute('href');
     if (href) window.location.href = href;
   }
-}
-
-function toggleExpand(id) {
-  if (expandedIds.has(id)) expandedIds.delete(id);
-  else expandedIds.add(id);
-  const card = document.querySelector('.card[data-id="' + CSS.escape(id) + '"]');
-  if (!card) return;
-  const open = expandedIds.has(id);
-  card.classList.toggle('expanded', open);
-  const toggle = card.querySelector('.details-toggle');
-  if (toggle) toggle.textContent = open ? 'Hide details' : 'Details';
 }
 
 function setJobStatus(id, status) {
@@ -1543,6 +1617,7 @@ function setJobStatus(id, status) {
   job.status = status;
   saveData({ jobs: id });
   renderJobs();
+  paintJobReport();
   showToast((job.customer || 'Job') + ': ' + (STATUS_LABELS[status] || status));
 }
 
@@ -1571,31 +1646,23 @@ function renderArchive() {
   list.innerHTML = groups.map(g => {
     return `<div class="archive-day">${esc(g.label)}</div>` + g.jobs.map(job => {
       const who = whoLabel(job.assignedTo);
-      const identity = [job.customer, job.vehicle].filter(Boolean).join(' · ');
-      const price = formatPrice(job.price);
-      const meta = [who, price].filter(Boolean).join(' · ');
+      const identity = jobIdentity(job);
       return `
         <div class="card archive-card" data-id="${esc(job.id)}">
-          <div class="card-identity">${esc(identity || job.desc)}</div>
-          <div class="card-job" style="margin-top:6px;color:var(--text-dim)">${esc(job.desc)}</div>
-          ${meta ? `<div class="archive-meta">${esc(meta)}</div>` : ''}
-          <div class="archive-actions">
-            <button class="btn btn-ghost btn-sm" type="button" data-act="restore">Restore</button>
-            <button class="btn btn-danger btn-sm" type="button" data-act="delete">Delete</button>
+          <div class="card-top">
+            <div class="card-identity">${esc(identity || job.desc)}</div>
+            ${cardPriceHtml(job)}
           </div>
+          ${who ? `<div class="card-sub"><span class="who">${esc(who)}</span></div>` : ''}
         </div>`;
     }).join('');
   }).join('');
 }
 
 function onArchiveClick(e) {
-  const actEl = e.target.closest('[data-act]');
-  if (!actEl) return;
-  const card = actEl.closest('.card');
+  const card = e.target.closest('.card');
   if (!card) return;
-  const id = card.dataset.id;
-  if (actEl.dataset.act === 'restore') restoreJob(id);
-  else if (actEl.dataset.act === 'delete') deleteJob(id, true);
+  openJobReport(card.dataset.id, true);
 }
 
 function renderTools() {
@@ -1656,37 +1723,6 @@ function resetTruckChecklist() {
   });
 }
 
-function setWhenChip(kind) {
-  document.querySelectorAll('#whenChips .choice-chip').forEach(c => {
-    c.classList.toggle('active', c.dataset.when === kind);
-  });
-  const input = document.getElementById('jobWhen');
-  if (kind === 'pick') {
-    input.hidden = false;
-    if (!input.value) input.value = toLocalInput(new Date());
-    input.focus();
-    return;
-  }
-  input.hidden = true;
-  const now = new Date();
-  let d;
-  if (kind === 'now') {
-    d = now;
-  } else if (kind === 'later') {
-    d = new Date(now);
-    d.setHours(15, 0, 0, 0);
-    if (d.getTime() <= now.getTime()) {
-      d = new Date(now.getTime() + 3 * 60 * 60 * 1000);
-      d.setMinutes(0, 0, 0);
-    }
-  } else {
-    d = new Date(now);
-    d.setDate(d.getDate() + 1);
-    d.setHours(9, 0, 0, 0);
-  }
-  input.value = toLocalInput(d);
-}
-
 function paintFormWho() {
   document.querySelectorAll('#whoChips .choice-chip').forEach(c => {
     c.classList.toggle('active', formWho.includes(c.dataset.who));
@@ -1711,15 +1747,15 @@ function toggleFormMore(force) {
 }
 
 function openModal(editId = null) {
+  closeJobReport();
   editingId = editId;
   document.getElementById('modalTitle').textContent = editId ? 'Edit Job' : 'New Job';
   document.getElementById('modalOverlay').classList.add('active');
   document.getElementById('jobForm').reset();
   formWho = [];
   paintFormWho();
-  document.querySelectorAll('#whenChips .choice-chip').forEach(c => c.classList.remove('active'));
-  document.getElementById('jobWhen').hidden = true;
   toggleFormMore(false);
+  paintPriceSelect(null);
 
   if (editId) {
     const job = data.jobs.find(j => j.id === editId);
@@ -1732,14 +1768,10 @@ function openModal(editId = null) {
     document.getElementById('jobDesc').value = job.desc;
     document.getElementById('jobTools').value = job.tools || '';
     document.getElementById('jobNotes').value = job.notes || '';
-    document.getElementById('jobPrice').value = formatPrice(job.price);
+    paintPriceSelect(job.price);
     document.getElementById('jobUrgent').checked = job.priority === 'urgent';
     formWho = parseAssigned(job.assignedTo);
     paintFormWho();
-    if (job.when) {
-      document.getElementById('jobWhen').hidden = false;
-      document.querySelector('#whenChips [data-when="pick"]')?.classList.add('active');
-    }
     if (job.tools || job.notes || job.priority === 'urgent') {
       toggleFormMore(true);
     }
@@ -1785,9 +1817,12 @@ function saveJob(e) {
   }
 
   saveData({ jobs: job.id });
+  const savedId = job.id;
+  const wasEdit = !!editingId;
   closeModal();
   renderAll();
-  showToast(editingId ? 'Job updated' : 'Job added');
+  showToast(wasEdit ? 'Job updated' : 'Job added');
+  if (wasEdit) openJobReport(savedId, false);
 }
 
 function editJob(id) {
@@ -1801,7 +1836,7 @@ function archiveJob(id) {
   job.completedAt = Date.now();
   data.archive.push(job);
   data.jobs.splice(idx, 1);
-  expandedIds.delete(id);
+  closeJobReport();
   saveData({ jobs: id, archive: id });
   renderAll();
   showToast('Job completed');
@@ -1815,6 +1850,7 @@ function restoreJob(id) {
   job.status = 'queued';
   data.jobs.push(job);
   data.archive.splice(idx, 1);
+  closeJobReport();
   saveData({ jobs: id, archive: id });
   renderAll();
   switchTab('jobs');
@@ -1835,6 +1871,7 @@ function deleteJob(id, fromArchive = false) {
       data.jobs = data.jobs.filter(j => j.id !== id);
     }
     saveData(fromArchive ? { archive: id } : { jobs: id });
+    closeJobReport();
     renderAll();
     showToast('Deleted');
   });
@@ -1844,6 +1881,7 @@ function renderAll() {
   renderJobs();
   renderTools();
   renderArchive();
+  paintJobReport();
 }
 
 function esc(str) {
